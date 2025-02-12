@@ -1,19 +1,5 @@
 package com.example.bordados;
 
-/*import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-
-import com.example.bordados.model.Permission;
-import com.example.bordados.model.Role;
-import com.example.bordados.model.RoleEnum;
-import com.example.bordados.model.User;
-import com.example.bordados.model.UserType;
-import com.example.bordados.repository.UserRepository;
-*/
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.boot.SpringApplication;
@@ -58,42 +44,7 @@ public class BordadosApplication {
                                         .Permission(Set.of(readPermission))
                                         .build();
 
-                        // CREATE USERS
-                        User userExample = User.builder()
-                                        .name("Jordy Camacho")
-                                        .email("jordycamacho225@gmail.com")
-                                        .registrationDate(new Date())
-                                        .password("012890")
-                                        .address("Narnia")
-                                        .affiliateCode("123456")
-                                        .type(UserType.ROLE_ADMIN)
-                                        .referrer(null)
-                                        .roles(Set.of(roleAdmin))
-                                        .isEnabled(true)
-                                        .accountNoExpired(true)
-                                        .accountNoLocked(true)
-                                        .credentialNoExpired(true)
-                                        .roles(Set.of(roleAdmin))
-                                        .build();
-
-                        User userexample2 = User.builder()
-                                        .name("Pepe Perez")
-                                        .email("example@gmail.com")
-                                        .registrationDate(new Date())
-                                        .password("012890")
-                                        .address("Narnia")
-                                        .affiliateCode("1234")
-                                        .type(UserType.ROLE_ADMIN)
-                                        .referrer(null)
-                                        .roles(Set.of(roleAdmin))
-                                        .isEnabled(true)
-                                        .accountNoExpired(true)
-                                        .accountNoLocked(true)
-                                        .credentialNoExpired(true)
-                                        .roles(Set.of(roleAdmin))
-                                        .build();
-
-                        userRepository.saveAll(List.of(userExample, userexample2));
+                        
                 };
         }*/
 }
