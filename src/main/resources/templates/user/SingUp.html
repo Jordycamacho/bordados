@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user}"></header>
+
+    <main>
+        <form class="form_login" th:action="@{/bordados/registro}" th:object="${userDTO}" method="post">
+            <!-- Nombre -->
+            <div class="flex-column">
+                <label>Nombre Completo</label>
+            </div>
+            <div class="inputForm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <input placeholder="Ingresa tu nombre completo" class="input" type="text" th:field="*{name}" id="name" required>
+                <small th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error en el nombre</small>
+            </div>
+
+            <!-- Correo Electrónico -->
+            <div class="flex-column">
+                <label>Correo Electrónico</label>
+            </div>
+            <div class="inputForm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input placeholder="Ingresa tu correo electrónico" class="input" type="email" id="email" th:field="*{email}" required>
+                <small th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error en el correo</small>
+            </div>
+
+            <!-- Verificación de Correo -->
+            <div class="flex-column">
+                <label>Verifica tu Correo Electrónico</label>
+            </div>
+            <div class="inputForm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input placeholder="Confirma tu correo electrónico" class="input" type="email" id="confirm-email"
+                    required>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="flex-column">
+                <label>Contraseña</label>
+            </div>
+            <div class="inputForm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input placeholder="Ingresa tu contraseña" class="input" type="password" id="password" th:field="*{password}" required>
+                <small th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error en la contraseña</small>
+            </div>
+
+            <!-- Dirección -->
+            <div class="flex-column">
+                <label>Dirección</label>
+            </div>
+            <div class="inputForm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <input placeholder="Ingresa tu dirección" class="input" type="text" id="address" th:field="*{address}" required>
+                <small th:if="${#fields.hasErrors('address')}" th:errors="*{address}">Error en la dirección</small>
+            </div>
+
+            <!-- Términos y Condiciones -->
+            <div class="flex-row">
+                <div>
+                    <input type="checkbox" id="terms" required>
+                    <label>Acepto los <span class="span">términos y condiciones</span></label>
+                </div>
+            </div>
+
+            <!-- Botón de Registro -->
+            <button class="button-submit" type="submit">Registrarse</button>
+
+            <!-- Enlace a Inicio de Sesión -->
+            <p class="p">¿Ya tienes una cuenta? <span class="span"><a href="/bordados/login">Inicia Sesión</a></span></p>
+
+            <div th:if="${error}" class="error-message">
+                <p th:text="${error}"></p>
+            </div>
+        </form>
+    </main>
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>
