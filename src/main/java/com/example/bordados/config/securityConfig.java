@@ -5,12 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -20,42 +18,33 @@ import com.example.bordados.service.ServiceImpl.IUserDetailServiceImpl;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class securityConfig {
+public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-
         return httpSecurity
                 .csrf(csrf -> csrf.disable())
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/css/**",
-                                "/js/**",
-                                "/images/**")
-                        .permitAll()
-
-                        .requestMatchers(
-                                "/css/**",
-                                "/js/**",
-                                "/images/**")
-                        .permitAll()
-
-                        .requestMatchers(
-                                "/css/**",
-                                "/js/**",
-                                "/images/**")
-                        .hasRole("ADMIN")
-
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/bordados/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                .build();
+
+                .formLogin(form -> form
+                        .loginPage("/bordados/login")
+                        .loginProcessingUrl("/bordados/login")
+                        .defaultSuccessUrl("/bordados/login-success")
+                        .failureUrl("/bordados/login?error=true")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/bordados/logout")
+                        .logoutSuccessUrl("/bordados/login?logout=true")
+                        .permitAll())
+                        .build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

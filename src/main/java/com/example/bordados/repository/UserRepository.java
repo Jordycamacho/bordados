@@ -17,4 +17,12 @@ public interface UserRepository extends JpaRepository<User, Long>{
      * @return Objeto Optional que puede contener el usuario encontrado
      */
     Optional<User> findUserByEmail(String email);
+
+    /**
+     * Busca un usuario por su código de afiliado.
+     * 
+     * @param affiliateCode Código de afiliado del usuario
+     * @return Objeto Optional que puede contener el usuario encontrado
+     */
+    Optional<User> findUserByAffiliateCode(String affiliateCode);
 }
