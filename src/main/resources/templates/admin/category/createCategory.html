@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+<body>
+
+    <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+    <nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+
+    <div class="container mt-4">
+        <h2>Crear Nueva Categoría</h2>
+
+        <form th:action="@{/admin/categorias/crear}" th:object="${category}" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="nameCategory" class="form-label">Nombre de Categoría</label>
+                <input type="text" id="nameCategory" th:field="*{nameCategory}" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-success">Guardar</button>
+            <a th:href="@{/admin/categorias}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+
+    <div th:replace="~{admin/category/templateAdmin.html::script}"></div>
+</body>
+</html>
