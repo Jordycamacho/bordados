@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+
+<body>
+
+    <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+    <nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+
+    <div class="container mt-4">
+        <h1 th:text="${subCategory.idSubCategory == null ? 'Crear Subcategoría' : 'Editar Subcategoría'}"></h1>
+
+        <form th:action="@{${subCategory.idSubCategory == null ? '/admin/subcategorias/crear' : '/admin/subcategorias/editar/' + subCategory.idSubCategory}}" method="post" th:object="${subCategory}" >
+            <div class="mb-3">
+                <label for="nameSubCategory" class="form-label">Nombre de Sub Categoría</label>
+                <input type="text" id="nameSubCategory" th:field="*{nameSubCategory}" class="form-control" required>
+            </div>
+
+            <label for="categoryId">Categoría:</label>
+            <select id="categoryId" th:field="*{categoryId}" required>
+                <option value="">Seleccione una categoría</option>
+                <option th:each="cat : ${categories}" th:value="${cat.idCategory}" th:text="${cat.nameCategory}">
+                </option>
+            </select>
+
+            <button type="submit" class="btn btn-success">Guardar</button>
+            <a th:href="@{/admin/categorias}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+
+    <div th:replace="~{admin/category/templateAdmin.html::script}"></div>
+</body>
+
+</html>
