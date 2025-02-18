@@ -9,10 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.bordados.DTOs.CategoryDTO;
+import com.example.bordados.DTOs.CategorySubCategoryDTO;
+import com.example.bordados.DTOs.SubCategoryDTO;
 import com.example.bordados.model.Category;
 import com.example.bordados.repository.CategoryRepository;
 import com.example.bordados.service.CategoryService;
-
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -80,4 +81,25 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.deleteById(id);
         log.info("Categoría eliminada exitosamente");
     }
+
+    @Override
+    public List<CategorySubCategoryDTO> getAllCategoriesWithSubCategories() {
+        List<Category> categories = categoryRepository.findAll(); // Asegúrate de que el repositorio devuelva entidades
+                                                                  // correctas
+        return categories.stream().map(category -> {
+            List<SubCategoryDTO> subCategories = category.getSubCategories().stream()
+                    .map(sub -> new SubCategoryDTO(
+                            sub.getIdSubcategory(),
+                            sub.getNameSubcategory(),
+                            category.getIdCategory(),
+                            category.getNameCategory()
+            ))
+                    .collect(Collectors.toList());
+            return new CategorySubCategoryDTO(
+                    category.getIdCategory(),
+                    category.getNameCategory(),
+                    subCategories);
+        }).collect(Collectors.toList());
+    }
+
 }
