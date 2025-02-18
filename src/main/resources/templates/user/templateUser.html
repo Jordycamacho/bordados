@@ -14,7 +14,7 @@
     <nav class="navbar">
 
         <div class="logo">
-            <a href="index.html"><img src="images/logo.jpg" alt="OtakuStitch Logo"></a>
+            <a href="index.html"><img src="images/logo.jpg" alt="Logo"></a>
         </div>
 
         <div class="mobile-icons">
@@ -56,43 +56,18 @@
             <li class="dropdown">
                 <a href="#"> Colecciones ⮞</a>
                 <ul class="dropdown-menu">
-                    <li class="dropdown">
-                        <a href="#">Sudaderas</a>
+                    <li class="dropdown" th:each="category : ${categoriesWithSub}">
+                        <a th:text="${category.nameCategory}" href="#"></a>
                         <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Sudaderas sin capucha</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Camisetas</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Conjuntos</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Niños</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
+                            <li th:each="subCategory : ${category.subCategories}">
+                                <a th:href="@{/bordados/categoria/{id}(id=${subCategory.idSubCategory})}" 
+                                th:text="${subCategory.nameSubCategory}"></a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
             </li>
+
 
             <li><a href="affiliate.html">Afiliacion</a></li>
             <li><a href="SizeGuide.html">Guía de tallas</a></li>
@@ -138,7 +113,6 @@
 
         </ul>
     </nav>
-
     <section class="hero-section">
         <a href="#" class="hero-link">
             <div class="hero-image">
@@ -159,7 +133,7 @@
     <nav class="navbar">
 
         <div class="logo">
-            <a href="index.html"><img src="img/logo.jpg" alt="OtakuStitch Logo"></a>
+            <a href="index.html"><img src="images/logo.jpg" alt="OtakuStitch Logo"></a>
         </div>
 
         <div class="mobile-icons">
@@ -201,43 +175,18 @@
             <li class="dropdown">
                 <a href="#"> Colecciones ⮞</a>
                 <ul class="dropdown-menu">
-                    <li class="dropdown">
-                        <a href="#">Sudaderas</a>
+                    <li class="dropdown" th:each="category : ${categoriesWithSub}">
+                        <a th:text="${category.nameCategory}" href="#"></a>
                         <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Sudaderas sin capucha</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Camisetas</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Conjuntos</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Niños</a>
-                        <ul class="dropdown-submenu">
-                            <li><a href="products.html">Estándar</a></li>
-                            <li><a href="products.html">Oversize</a></li>
+                            <li th:each="subCategory : ${category.subCategories}">
+                                <a th:href="@{/bordados/categoria/{id}(id=${subCategory.idSubCategory})}" 
+                                th:text="${subCategory.nameSubCategory}"></a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
             </li>
+
 
             <li><a href="affiliate.html">Afiliacion</a></li>
             <li><a href="SizeGuide.html">Guía de tallas</a></li>
