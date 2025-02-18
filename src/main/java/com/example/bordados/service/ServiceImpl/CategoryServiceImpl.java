@@ -84,21 +84,21 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategorySubCategoryDTO> getAllCategoriesWithSubCategories() {
-        List<Category> categories = categoryRepository.findAll(); // Asegúrate de que el repositorio devuelva entidades
-                                                                  // correctas
+        List<Category> categories = categoryRepository.findAll();
         return categories.stream().map(category -> {
             List<SubCategoryDTO> subCategories = category.getSubCategories().stream()
-                    .map(sub -> new SubCategoryDTO(
-                            sub.getIdSubcategory(),
-                            sub.getNameSubcategory(),
-                            category.getIdCategory(),
-                            category.getNameCategory()
-            ))
+                    .map(sub -> SubCategoryDTO.builder()
+                            .idSubCategory(sub.getIdSubcategory())
+                            .nameSubCategory(sub.getNameSubcategory())
+                            .categoryId(category.getIdCategory())
+                            .categoryName(category.getNameCategory())
+                            .build())
                     .collect(Collectors.toList());
-            return new CategorySubCategoryDTO(
-                    category.getIdCategory(),
-                    category.getNameCategory(),
-                    subCategories);
+            return CategorySubCategoryDTO.builder()
+                    .idCategory(category.getIdCategory())
+                    .nameCategory(category.getNameCategory())
+                    .subCategories(subCategories)
+                    .build();
         }).collect(Collectors.toList());
     }
 

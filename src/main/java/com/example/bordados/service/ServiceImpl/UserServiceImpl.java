@@ -61,7 +61,7 @@ public UserResponseDTO registerUser(UserDTO userDTO) {
             .accountNoExpired(true)
             .accountNoLocked(true)
             .isEnabled(true)
-            .roles(Set.of(defaultRole))  // 🔥 Aquí se asigna el rol correctamente
+            .roles(Set.of(defaultRole))
             .build();
 
     user = userRepository.save(user);
