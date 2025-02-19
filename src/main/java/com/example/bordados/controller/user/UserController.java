@@ -1,4 +1,4 @@
-package com.example.bordados.controller;
+package com.example.bordados.controller.user;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +20,7 @@ import com.example.bordados.model.Product;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ServiceImpl.CategoryServiceImpl;
 import com.example.bordados.service.ServiceImpl.ProductServiceImpl;
+import com.example.bordados.service.ServiceImpl.UserServiceImpl;
 
 import jakarta.validation.Valid;
 
@@ -35,7 +36,7 @@ public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
-    private IUserService userService;
+    private UserServiceImpl userService;
 
     @Autowired
     private CategoryServiceImpl categoryService;
