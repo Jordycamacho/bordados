@@ -6,6 +6,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,48 +37,57 @@ public class UserServiceImpl implements IUserService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-public UserResponseDTO registerUser(UserDTO userDTO) {
-    if (userRepository.findUserByEmail(userDTO.getEmail()).isPresent()) {
-        LOGGER.warn("Intento de registro con correo ya existente: {}", userDTO.getEmail());
-        throw new IllegalArgumentException("Email already exists");
+    public UserResponseDTO registerUser(UserDTO userDTO) {
+        if (userRepository.findUserByEmail(userDTO.getEmail()).isPresent()) {
+            LOGGER.warn("Intento de registro con correo ya existente: {}", userDTO.getEmail());
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        String affiliateCode;
+        do {
+            affiliateCode = AffiliateCodeGenerator.generateAffiliateCode();
+        } while (userRepository.findUserByAffiliateCode(affiliateCode).isPresent());
+
+        // Buscar el rol en la base de datos
+        Role defaultRole = roleRepository.findByRoleEnum(RoleEnum.USER)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        User user = User.builder()
+                .name(userDTO.getName())
+                .type(UserType.ROLE_USER)
+                .email(userDTO.getEmail())
+                .registrationDate(new Date())
+                .affiliateCode(affiliateCode)
+                .address(userDTO.getAddress())
+                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .credentialNoExpired(true)
+                .accountNoExpired(true)
+                .accountNoLocked(true)
+                .isEnabled(true)
+                .roles(Set.of(defaultRole))
+                .build();
+
+        user = userRepository.save(user);
+        LOGGER.info("Usuario registrado exitosamente: {}", user.getEmail());
+
+        return UserResponseDTO.builder()
+                .affiliateCode(user.getAffiliateCode())
+                .address(user.getAddress())
+                .email(user.getEmail())
+                .name(user.getName())
+                .type(user.getType())
+                .id(user.getId())
+                .build();
     }
 
-    String affiliateCode;
-    do {
-        affiliateCode = AffiliateCodeGenerator.generateAffiliateCode();
-    } while (userRepository.findUserByAffiliateCode(affiliateCode).isPresent());
-
-    // Buscar el rol en la base de datos
-    Role defaultRole = roleRepository.findByRoleEnum(RoleEnum.USER)
-            .orElseThrow(() -> new RuntimeException("Role not found"));
-
-    User user = User.builder()
-            .name(userDTO.getName())
-            .type(UserType.ROLE_USER)
-            .email(userDTO.getEmail())
-            .registrationDate(new Date())
-            .affiliateCode(affiliateCode)
-            .address(userDTO.getAddress())
-            .password(passwordEncoder.encode(userDTO.getPassword()))
-            .credentialNoExpired(true)
-            .accountNoExpired(true)
-            .accountNoLocked(true)
-            .isEnabled(true)
-            .roles(Set.of(defaultRole))
-            .build();
-
-    user = userRepository.save(user);
-    LOGGER.info("Usuario registrado exitosamente: {}", user.getEmail());
-
-    return UserResponseDTO.builder()
-            .affiliateCode(user.getAffiliateCode())
-            .address(user.getAddress())
-            .email(user.getEmail())
-            .name(user.getName())
-            .type(user.getType())
-            .id(user.getId())
-            .build();
-}
-
-
+    @Override
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("No hay usuario autenticado");
+        }
+        String username = authentication.getName();
+        return userRepository.findUserByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+    }
 }
