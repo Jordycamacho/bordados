@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+
+        <section class="product-display">
+            <!-- Foto Principal del Producto -->
+            <div class="product-image">
+                <img th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
+            </div>
+
+
+            <div class="product-form">
+                <h1 th:text="${product.name}"></h1>
+                <p class="product-description" th:text="${product.description}"></p>
+                <p class="product-price" th:text="${product.price} + '0 $'"></p>
+
+                <form th:if="${product.quantity > 0}" th:action="@{/bordados/carrito/agregar}" method="post">
+                    <!-- Cantidad -->
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <div class="quantity-selector">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">-</button>
+                            <input type="number" name="quantity" id="quantity" th:max="${product.quantity}" value="1"
+                                min="1" class="quantity-input">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
+                        </div>
+                    </div>
+
+                    <p th:text="'Disponibles: ' + ${product.quantity}"></p>
+
+                    <!-- Elige el color -->
+                    <div class="form-group">
+                        <label>Elige el color de tu prenda*</label>
+                        <div class="color-options">
+                            <button th:each="color : ${product.colors}" th:data-color="${color}" class="color-option"
+                                th:style="'background-color: ' + ${color.name.toLowerCase()} + ';'"
+                                onclick="selectColor(event)">
+                            </button>
+                        </div>
+                        <input type="hidden" name="color" id="selectedColor">
+                    </div>
+
+                    <!-- Elige tu talla -->
+                    <div class="form-group">
+                        <label>Elige tu talla*</label>
+                        <div class="size-options">
+                            <button th:each="size : ${product.sizes}" th:data-size="${size}" class="size-option"
+                                onclick="selectSize(event)">
+                                [[${size}]]
+                            </button>
+                        </div>
+                        <input type="hidden" name="size" id="selectedSize">
+                    </div>
+
+
+                    <!-- Botón para ir a la sección de pago -->
+                    <button type="submit" data-tooltip="Price:-$20" class="button_cart">
+                        <div class="button-wrapper_cart">
+                            <div class="text_cart">Comprar</div>
+                            <span class="icon_cart">
+                                <svg viewBox="0 0 16 16" class="bi bi-cart2" fill="currentColor" height="16" width="16"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </div>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Guía de Tallas -->
+        <section class="size-guide">
+            <h2>Guía de Tallas</h2>
+            <div class="tables-container">
+                <!-- Tabla para Camisas -->
+                <div class="size-table">
+                    <h3>Camisas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>50</td>
+                                <td>70</td>
+                                <td>60</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>53</td>
+                                <td>72</td>
+                                <td>62</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>56</td>
+                                <td>74</td>
+                                <td>64</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>59</td>
+                                <td>76</td>
+                                <td>66</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>62</td>
+                                <td>78</td>
+                                <td>68</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tabla para Sudaderas -->
+                <div class="size-table">
+                    <h3>Sudaderas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>55</td>
+                                <td>65</td>
+                                <td>58</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>58</td>
+                                <td>68</td>
+                                <td>60</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>61</td>
+                                <td>71</td>
+                                <td>62</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>64</td>
+                                <td>74</td>
+                                <td>64</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>67</td>
+                                <td>77</td>
+                                <td>66</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+    <script>
+        function updateQuantity(change) {
+            let quantityInput = document.getElementById('quantity');
+            let maxQuantity = parseInt(quantityInput.getAttribute('max'));
+            let newValue = parseInt(quantityInput.value) + change;
+            if (newValue >= 1 && newValue <= maxQuantity) {
+                quantityInput.value = newValue;
+            }
+        }
+
+        function selectColor(event) {
+            document.getElementById('selectedColor').value = event.target.dataset.color;
+        }
+
+        function selectSize(event) {
+            document.getElementById('selectedSize').value = event.target.dataset.size;
+        }
+    </script>
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>

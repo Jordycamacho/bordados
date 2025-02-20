@@ -23,7 +23,7 @@
                     <img th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
                     <h3 class="product-name" th:text="${product.name}"></h3>
                     <p class="product-price" th:text="${product.price}+ '0 $'"></p>
-                    <a th:href="@{/bordados/producto/{id}(id=${product.id})}">
+                    <a th:href="@{/bordados/producto/vista/{id}(id=${product.id})}">
                         <button class="c-button c-button--gooey">
                             Seleccionar
                             <div class="c-button__blobs">
