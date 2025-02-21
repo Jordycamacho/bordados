@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+        <section class="cart-section">
+            <h2>Carrito de Compras</h2>
+            <div class="cart-items">
+                <!-- Iterar sobre los productos en el carrito -->
+                <div class="cart-item" th:each="cartItem : ${cartItems}">
+                    <div class="item-image">
+                        <img th:src="@{'/images/' + ${cartItem.image}}" alt="Producto">
+                    </div>
+                    <div class="item-details">
+                        <h3 class="item-name" th:text="${cartItem.productName}"></h3>
+                        <p class="item-price" th:text="'$' + ${cartItem.price}"></p>
+
+                        <!-- Mostrar cantidad sin permitir cambios -->
+                        <p class="item-quantity">Cantidad: <span th:text="${cartItem.quantity}"></span></p>
+
+                        <!-- Color seleccionado -->
+                        <div class="selected-color">
+                            <span>Color:</span>
+                            <div class="color-box" th:style="'background-color:' + ${cartItem.color} + ';'"></div>
+                        </div>
+
+                        <!-- Talla seleccionada -->
+                        <p class="selected-size">Talla: <span th:text="${cartItem.size}"></span></p>
+                    </div>
+
+                    <!-- Botón para eliminar producto -->
+                    <form th:action="@{/bordados/carrito/eliminar}" method="post">
+                        <input type="hidden" name="cartId" th:value="${cartItem.id}">
+                        <button type="submit" class="button_remove">
+                            <svg viewBox="0 0 448 512" class="svgIcon_remove">
+                                <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Botón para proceder al pago -->
+            <div class="button_cart">
+                <div class="button-wrapper_cart">
+                    <div class="text_cart">Comprar</div>
+                    <span class="icon_cart">
+                        <svg viewBox="0 0 16 16" class="bi bi-cart2" fill="currentColor" height="16" width="16">
+                            <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"></path>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+
+    <div th:insert="~{user/templateUser.html::script}"></div>
+
+    <style>
+        .selected-color {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .selected-color span {
+            margin-right: 5px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+        }
+
+        .selected-size {
+            font-weight: bold;
+        }
+    </style>
+    
+</body>
+
+</html>

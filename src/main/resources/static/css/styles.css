@@ -17,6 +17,12 @@ body {
     background-color: #ffffff;
 }
 
+.selected {
+    border: 2px solid black; /* Puedes cambiar el color del borde */
+    opacity: 0.7; /* Efecto visual de selección */
+}
+
+
 /*Botones*/
 
 /*Boton de agregar al carrito y de pagar*/
@@ -1194,6 +1200,27 @@ body {
     background-color: var(--background-color);
 }
 
+.cart-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 10px;
+    background-color: var(--background-color);
+    justify-content: space-between; /* Distribuye los elementos */
+}
+
+.item-image {
+    flex: 0 0 80px; /* Imagen fija */
+}
+
 .item-image img {
     width: 80px;
     height: 80px;
@@ -1202,8 +1229,35 @@ body {
 }
 
 .item-details {
-    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    flex-grow: 1; /* Permite que ocupe el espacio necesario */
 }
+
+.button_remove {
+    flex: 0 0 auto;
+}
+
+/* 🟢 RESPONSIVE: Ajuste para móviles */
+@media (max-width: 768px) {
+    .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .item-details {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .button_remove {
+        align-self: flex-end;
+    }
+}
+
+
 
 .item-name {
     font-size: var(--font-size-medium);
