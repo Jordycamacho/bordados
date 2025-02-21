@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.DTOs.UserDTO;
 import com.example.bordados.model.Product;
+import com.example.bordados.service.CategoryService;
 import com.example.bordados.service.IUserService;
-import com.example.bordados.service.ServiceImpl.CategoryServiceImpl;
-import com.example.bordados.service.ServiceImpl.ProductServiceImpl;
-import com.example.bordados.service.ServiceImpl.UserServiceImpl;
+import com.example.bordados.service.ProductService;
 
 import jakarta.validation.Valid;
 
@@ -36,13 +35,13 @@ public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
-    private UserServiceImpl userService;
+    private IUserService userService;
 
     @Autowired
-    private CategoryServiceImpl categoryService;
+    private CategoryService categoryService;
 
     @Autowired
-    private ProductServiceImpl productService;
+    private ProductService productService;
 
     @ModelAttribute("categoriesWithSub")
     public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
