@@ -1,6 +1,7 @@
 package com.example.bordados.service.ServiceImpl;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -89,5 +90,9 @@ public class UserServiceImpl implements IUserService {
         String username = authentication.getName();
         return userRepository.findUserByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+    }
+
+    public Optional<User> getUserById(Long userId) {
+        return userRepository.findById(userId);
     }
 }

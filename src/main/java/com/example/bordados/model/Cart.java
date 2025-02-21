@@ -1,6 +1,12 @@
 package com.example.bordados.model;
 
+import com.example.bordados.model.Enums.Color;
+import com.example.bordados.model.Enums.Size;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,5 +30,13 @@ public class Cart {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    private int quantity; 
+    private int quantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Size size;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Color color;
 }
