@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.bordados.DTOs.CartDTO;
+import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.model.User;
 import com.example.bordados.model.Enums.Color;
 import com.example.bordados.model.Enums.Size;
 import com.example.bordados.service.CartService;
+import com.example.bordados.service.CategoryService;
 import com.example.bordados.service.IUserService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 @RequestMapping("/bordados/carrito")
@@ -30,6 +33,14 @@ public class CartController {
     @Autowired
     private IUserService userService;
 
+    @Autowired
+    private CategoryService categoryService;
+
+    @ModelAttribute("categoriesWithSub")
+    public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
+        return categoryService.getAllCategoriesWithSubCategories();
+    }
+    
     @GetMapping("")
     public String ShowViewCart(Model model, Principal principal) {
         User user = userService.getCurrentUser();
