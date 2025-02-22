@@ -15,46 +15,36 @@
 
     <main>
         <section class="collections">
-            <h2>COLECCIONES</h2>
+            <h2>PERSONALIZA TU PRENDA</h2>
             <div class="collections-grid">
-                <a href="products.html" class="collection-item">
+                <a th:each="product : ${customizableProducts}" th:href="@{'/personalizar/' + ${product.id}}"
+                    class="collection-item">
                     <div class="collection-image">
-                        <img src="img/sudadera.webp" alt="LOOSE-ETPANT">
-                        <div class="collection-name">LOOSE-ETPANT</div>
-                    </div>
-                </a>
-                <a href="products.html" class="collection-item">
-                    <div class="collection-image">
-                        <img src="img/sudadera.webp" alt="MONKEYB">
-                        <div class="collection-name">MONKEYB</div>
-                    </div>
-                </a>
-                <a href="products.html" class="collection-item">
-                    <div class="collection-image">
-                        <img src="img/sudadera.webp" alt="五条悟">
-                        <div class="collection-name">五条悟</div>
-                    </div>
-                </a>
-                <a href="products.html" class="collection-item">
-                    <div class="collection-image">
-                        <img src="img/sudadera.webp" alt="T-SHIRT">
-                        <div class="collection-name">T-SHIRT</div>
+                        <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}">
+                        <div class="collection-name" th:text="${product.name}"></div>
                     </div>
                 </a>
             </div>
         </section>
+
 
         <section class="bestsellers">
             <h2>BESTSELLERS</h2>
             <div class="bestsellers-grid">
-                <!-- Producto 1 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
+                <div th:each="product : ${bestsellers}" class="product-card">
+                    <button class="favorite-btn"
+                        th:attr="onclick=|window.location.href='@{/bordados/wishlist/add/{id}(id=${product.id})}'|">
+                        ❤️
+                    </button>
+                    <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}" class="product-image">
+                    <h3 class="product-name" th:text="${product.name}"></h3>
+                    <p class="product-price">
+                        $<span th:text="${product.price}"></span>
+                        <span class="old-price" th:if="${product.discount > 0}">
+                            $<span th:text="${product.price + product.discount}"></span>
+                        </span>
+                    </p>
+                    <a th:href="@{/bordados/producto/vista/{id}(id=${product.id})}">
                         <button class="c-button c-button--gooey">
                             Seleccionar
                             <div class="c-button__blobs">
@@ -63,231 +53,11 @@
                                 <div></div>
                             </div>
                         </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 2 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 3 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 4 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 1 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 2 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 3 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 4 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
                     </a>
                 </div>
             </div>
         </section>
+
 
         <section class="customize-section">
             <div class="customize-image">
@@ -301,16 +71,22 @@
         </section>
 
         <section class="bestsellers">
-            <h2>BESTSELLERS</h2>
+            <h2>OTROS PRODUCTOS</h2>
             <div class="bestsellers-grid">
-                <!-- Producto 1 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
+                <div th:each="product : ${randomProducts}" class="product-card">
+                    <button class="favorite-btn"
+                        th:attr="onclick=|window.location.href='@{/bordados/wishlist/add/{id}(id=${product.id})}'|">
+                        ❤️
+                    </button>
+                    <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}" class="product-image">
+                    <h3 class="product-name" th:text="${product.name}"></h3>
+                    <p class="product-price">
+                        $<span th:text="${product.price}"></span>
+                        <span class="old-price" th:if="${product.discount > 0}">
+                            $<span th:text="${product.price + product.discount}"></span>
+                        </span>
+                    </p>
+                    <a th:href="@{/bordados/producto/vista/{id}(id=${product.id})}">
                         <button class="c-button c-button--gooey">
                             Seleccionar
                             <div class="c-button__blobs">
@@ -319,231 +95,11 @@
                                 <div></div>
                             </div>
                         </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 2 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 3 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 4 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 1 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 2 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 3 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Producto 4 -->
-                <div class="product-card">
-                    <button class="favorite-btn">❤️</button>
-                    <img src="img/sudadera.webp" alt="Lady Vs Titan Hoodie" class="product-image">
-                    <h3 class="product-name">Lady Vs Titan Hoodie</h3>
-                    <p class="product-price">$65.00 <span class="old-price">$80.00</span></p>
-
-                    <a href="product.html">
-                        <button class="c-button c-button--gooey">
-                            Seleccionar
-                            <div class="c-button__blobs">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
-                        </button>
-                        <svg style="display: block; height: 0; width: 0;" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <filter id="goo">
-                                    <feGaussianBlur result="blur" stdDeviation="10" in="SourceGraphic"></feGaussianBlur>
-                                    <feColorMatrix result="goo" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                                        mode="matrix" in="blur"></feColorMatrix>
-                                    <feBlend in2="goo" in="SourceGraphic"></feBlend>
-                                </filter>
-                            </defs>
-                        </svg>
                     </a>
                 </div>
             </div>
         </section>
+
     </main>
 
     <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
