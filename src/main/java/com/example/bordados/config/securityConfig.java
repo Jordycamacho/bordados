@@ -28,7 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/bordados","/bordados/producto/**").permitAll()
                         .requestMatchers("/bordados/login","/bordados/registro","/bordados/categoria/**","/bordados/login-success","/bordados/registro").permitAll()
-                        .requestMatchers("/bordados/carrito/**", "/bordados/wishlist/**").hasRole("USER")
+                        .requestMatchers("/bordados/carrito/**", "/bordados/wishlist/**").hasAnyRole("USER","ADMIN")
                         .requestMatchers("/admin/**","/swagger-ui/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
 
