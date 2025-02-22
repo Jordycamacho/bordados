@@ -49,7 +49,15 @@ public class UserController {
     }
     
     @GetMapping("")
-    public String getProducts() {
+    public String getProducts(Model model) {
+        List<Product> customizableProducts = productService.getCustomizableProducts();
+        List<Product> bestsellrs = productService.getTopSellingProducts();
+        List<Product> randomProducts = productService.getRandomProducts();
+
+        model.addAttribute("customizableProducts", customizableProducts);
+        model.addAttribute("bestsellers", bestsellrs);
+        model.addAttribute("randomProducts", randomProducts);
+        
         return "user/index";
     }
 

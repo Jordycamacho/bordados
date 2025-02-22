@@ -1,7 +1,10 @@
 package com.example.bordados.service.ServiceImpl;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -187,4 +190,25 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    public List<Product> getCustomizableProducts() {
+        return productRepository.findAll().stream()
+                .filter(product -> product.getCategory().getNameCategory().equalsIgnoreCase("Personalizar"))
+                .collect(Collectors.toList());
+    }
+
+    public List<Product> getTopSellingProducts() {
+        return productRepository.findAll().stream()
+               .sorted(Comparator.comparingInt(Product::getSalesCount).reversed())
+               .limit(8)
+               .collect(Collectors.toList());
+            
+    }
+    
+    public List<Product> getRandomProducts() {
+        List<Product> allProducts = productRepository.findAll();
+        Collections.shuffle(allProducts); // Mezcla la lista aleatoriamente
+        return allProducts.stream().limit(8).collect(Collectors.toList());
+    }
+    
 }

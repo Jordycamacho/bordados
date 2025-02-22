@@ -29,5 +29,11 @@ public interface ProductService {
 
     void deleteProduct(Long id);
 
+    List<Product> getCustomizableProducts();
+
+    List<Product> getTopSellingProducts();
+
+    List<Product> getRandomProducts();
+
     double calculateDiscountedPrice(Product product, boolean firstPurchase, boolean isAffiliate);
 }
