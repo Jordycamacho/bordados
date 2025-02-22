@@ -26,8 +26,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/bordados/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/bordados","/bordados/producto/**").permitAll()
+                        .requestMatchers("/bordados/login","/bordados/registro","/bordados/categoria/**","/bordados/login-success","/bordados/registro").permitAll()
+                        .requestMatchers("/bordados/carrito/**", "/bordados/wishlist/**").hasRole("USER")
+                        .requestMatchers("/admin/**","/swagger-ui/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
 
                 .formLogin(form -> form

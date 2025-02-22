@@ -59,6 +59,7 @@ public class UserController {
         model.addAttribute("products", products);
         return "user/products";
     }
+    
     @GetMapping("/login")
     public String getLogin(@RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "logout", required = false) String logout,
