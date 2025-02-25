@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+
+        <section class="product-display">
+            <!-- Foto Principal del Producto -->
+            <div class="product-image">
+                <img th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
+            </div>
+
+            <div class="product-form">
+                <h1 th:text="${product.name}"></h1>
+                <p class="product-description" th:text="${product.description}"></p>
+                <p class="product-price" th:text="${product.price} + '0 $'"></p>
+
+
+
+
+                <form th:if="${product.quantity > 0}" th:action="@{/bordados/producto/save}" method="post"
+                    enctype="multipart/form-data" onsubmit="validateForm(event)">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+
+                    <!-- Cantidad -->
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <div class="quantity-selector">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">-</button>
+                            <input type="number" name="quantity" id="quantity" th:max="${product.quantity}" value="1"
+                                min="1" class="quantity-input">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
+                        </div>
+                    </div>
+
+                    <p th:text="'Disponibles: ' + ${product.quantity}"></p>
+
+                    <!-- Color -->
+                    <div class="form-group">
+                        <label>Elige el color de tu prenda*</label>
+                        <div class="color-options">
+                            <button th:each="color : ${product.colors}" th:data-color="${color}" class="color-option"
+                                th:style="'background-color: ' + ${color} + ';'" onclick="selectColor(event)">
+                            </button>
+                        </div>
+                        <input type="hidden" name="color" id="selectedColor">
+                    </div>
+
+                    <!-- Talla -->
+                    <div class="form-group">
+                        <label>Elige tu talla*</label>
+                        <div class="size-options">
+                            <button th:each="size : ${product.sizes}" th:data-size="${size}" class="size-option"
+                                onclick="selectSize(event)">
+                                [[${size}]]
+                            </button>
+                        </div>
+                        <input type="hidden" name="size" id="selectedSize">
+                    </div>
+
+                    <!-- Primer bordado -->
+                    <div class="form-group">
+                        <label>¿Qué primer diseño quieres bordar?*</label>
+                        <input type="file" name="firstEmbroideryFile" class="file-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Qué tipo de bordado quieres?*</label>
+                        <select name="embroideryType" class="form-select" required>
+                            <option value="standard">Bordado estándar</option>
+                            <option value="premium">Bordado premium</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Dónde quieres tu primer bordado?*</label>
+                        <div class="placement-options">
+                            <button type="button" class="placement-option" data-placement="left"
+                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado izquierdo</button>
+                            <button type="button" class="placement-option" data-placement="center"
+                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Medio del pecho</button>
+                            <button type="button" class="placement-option" data-placement="back"
+                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Espalda</button>
+                        </div>
+                        <input type="hidden" name="firstEmbroideryPlacement" id="firstEmbroideryPlacement">
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea name="observations" class="form-textarea"
+                            placeholder="Escribe aquí tus observaciones..."></textarea>
+                    </div>
+
+                    <!-- Segundo bordado (opcional) -->
+                    <div class="form-group">
+                        <label>¿Quieres un segundo bordado en tu prenda?</label>
+                        <div class="radio-options">
+                            <label><input type="radio" name="hasSecondEmbroidery" value="true"
+                                    onclick="toggleSection('second-embroidery-section', true)"> Sí</label>
+                            <label><input type="radio" name="hasSecondEmbroidery" value="false"
+                                    onclick="toggleSection('second-embroidery-section', false)" checked> No</label>
+                        </div>
+                    </div>
+
+                    <div id="second-embroidery-section" class="hidden">
+                        <div class="form-group">
+                            <label>Sube tu segundo diseño*</label>
+                            <input type="file" name="secondEmbroideryFile" class="file-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tipo de bordado</label>
+                            <select name="secondEmbroideryType" class="form-select">
+                                <option value="standard">Bordado estándar</option>
+                                <option value="premium">Bordado premium</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ubicación del segundo bordado</label>
+                            <input type="text" name="secondEmbroideryPlacement" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Observaciones</label>
+                            <textarea name="observationsSecondEmbroidery" class="form-textarea"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Bordado en manga (opcional) -->
+                    <div class="form-group">
+                        <label>¿Quieres bordar una manga?</label>
+                        <div class="radio-options">
+                            <label><input type="radio" name="hasSleeveEmbroidery" value="true"
+                                    onclick="toggleSection('sleeve-embroidery-section', true)"> Sí</label>
+                            <label><input type="radio" name="hasSleeveEmbroidery" value="false"
+                                    onclick="toggleSection('sleeve-embroidery-section', false)" checked> No</label>
+                        </div>
+                    </div>
+
+                    <div id="sleeve-embroidery-section" class="hidden">
+                        <div class="form-group">
+                            <label>¿En qué manga?</label>
+                            <div class="radio-options">
+                                <label><input type="radio" name="sleeveSide" value="left"> Izquierda</label>
+                                <label><input type="radio" name="sleeveSide" value="right"> Derecha</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Diseño para la manga</label>
+                            <input type="text" name="sleeveDesign" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Color del hilo</label>
+                            <input type="color" name="sleeveThreadColor" class="color-picker">
+                        </div>
+                    </div>
+
+                    <!-- Botón para enviar -->
+                    <button type="submit">Comprar</button>
+                </form>
+
+            </div>
+        </section>
+
+        <!-- Guía de Tallas -->
+        <section class="size-guide">
+            <h2>Guía de Tallas</h2>
+            <div class="tables-container">
+                <!-- Tabla para Camisas -->
+                <div class="size-table">
+                    <h3>Camisas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>50</td>
+                                <td>70</td>
+                                <td>60</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>53</td>
+                                <td>72</td>
+                                <td>62</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>56</td>
+                                <td>74</td>
+                                <td>64</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>59</td>
+                                <td>76</td>
+                                <td>66</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>62</td>
+                                <td>78</td>
+                                <td>68</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tabla para Sudaderas -->
+                <div class="size-table">
+                    <h3>Sudaderas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>55</td>
+                                <td>65</td>
+                                <td>58</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>58</td>
+                                <td>68</td>
+                                <td>60</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>61</td>
+                                <td>71</td>
+                                <td>62</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>64</td>
+                                <td>74</td>
+                                <td>64</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>67</td>
+                                <td>77</td>
+                                <td>66</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+    <script>
+        function updateQuantity(change) {
+            let quantityInput = document.getElementById('quantity');
+            let maxQuantity = parseInt(quantityInput.getAttribute('max'));
+            let newValue = parseInt(quantityInput.value) + change;
+            if (newValue >= 1 && newValue <= maxQuantity) {
+                quantityInput.value = newValue;
+            }
+        }
+
+        function selectColor(event) {
+            event.preventDefault();
+            document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedColor').value = event.target.dataset.color;
+        }
+
+        function selectSize(event) {
+            event.preventDefault();
+            document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedSize').value = event.target.dataset.size;
+        }
+
+        function selectPlacement(event, inputId) {
+            event.preventDefault();
+            document.getElementById(inputId).value = event.target.dataset.placement;
+        }
+
+        function toggleSection(sectionId, show) {
+            document.getElementById(sectionId).style.display = show ? "block" : "none";
+        }
+
+        function validateForm(event) {
+            let selectedColor = document.getElementById("selectedColor").value;
+            let selectedSize = document.getElementById("selectedSize").value;
+
+            if (!selectedColor || !selectedSize) {
+                event.preventDefault();
+                alert("Por favor, selecciona una talla y un color antes de continuar.");
+            }
+        }
+    </script>
+
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>

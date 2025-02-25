@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <style>
+        /* orderStyles.css */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    max-width: 800px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+.user-info, .discount-code {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #007bff;
+    color: white;
+}
+
+tr:hover {
+    background: #f1f1f1;
+    transition: background 0.3s ease;
+}
+
+.discount-code input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.checkout-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #28a745;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.checkout-btn:hover {
+    background: #218838;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    main {
+        padding: 15px;
+    }
+    th, td {
+        font-size: 14px;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+    </style>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+        <h1>Resumen de tu Orden</h1>
+        <div class="user-info">
+            <p><strong>Nombre:</strong> [[${user.name}]]</p>
+            <p><strong>Email:</strong> [[${user.email}]]</p>
+            <p><strong>Dirección:</strong> [[${user.address}]]</p>
+        </div>
+        
+        <h2>Productos en tu Carrito</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Talla</th>
+                    <th>Color</th>
+                    <th>Precio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${cartItems}">
+                    <td>[[${item.productName}]]</td>
+                    <td>[[${item.quantity}]]</td>
+                    <td>[[${item.size}]]</td>
+                    <td>[[${item.color}]]</td>
+                    <td>[[${item.price}]] $</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p><strong>Total:</strong> [[${total}]] $</p>
+        
+        <div class="discount-code">
+            <label for="affiliateCode">Código de Afiliación / Descuento:</label>
+            <input type="text" id="affiliateCode" name="affiliateCode">
+        </div>
+        
+        <button class="checkout-btn">Proceder al Pago</button>
+    </main>
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>
