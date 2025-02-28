@@ -17,7 +17,7 @@
         <section class="collections">
             <h2>PERSONALIZA TU PRENDA</h2>
             <div class="collections-grid">
-                <a th:each="product : ${customizableProducts}" th:href="@{'/personalizar/' + ${product.id}}"
+                <a th:each="product : ${customizableProducts}" th:href="@{'/bordados/producto/personalizar/' + ${product.id}}"
                     class="collection-item">
                     <div class="collection-image">
                         <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}">

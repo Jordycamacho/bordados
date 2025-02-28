@@ -44,7 +44,9 @@
                         <input type="hidden" name="cartId" th:value="${cartItem.id}">
                         <button type="submit" class="button_remove">
                             <svg viewBox="0 0 448 512" class="svgIcon_remove">
-                                <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path>
+                                <path
+                                    d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z">
+                                </path>
                             </svg>
                         </button>
                     </form>
@@ -52,16 +54,20 @@
             </div>
 
             <!-- Botón para proceder al pago -->
-            <div class="button_cart">
-                <div class="button-wrapper_cart">
-                    <div class="text_cart">Comprar</div>
-                    <span class="icon_cart">
-                        <svg viewBox="0 0 16 16" class="bi bi-cart2" fill="currentColor" height="16" width="16">
-                            <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"></path>
-                        </svg>
-                    </span>
+            <a th:href="@{/bordados/orden}">
+                <div class="button_cart">
+                    <div class="button-wrapper_cart">
+                        <div class="text_cart">Comprar</div>
+                        <span class="icon_cart">
+                            <svg viewBox="0 0 16 16" class="bi bi-cart2" fill="currentColor" height="16" width="16">
+                                <path
+                                    d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z">
+                                </path>
+                            </svg>
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </a>
         </section>
     </main>
 
@@ -93,7 +99,7 @@
             font-weight: bold;
         }
     </style>
-    
+
 </body>
 
 </html>

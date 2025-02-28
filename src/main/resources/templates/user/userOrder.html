@@ -13,111 +13,116 @@
 <body>
     <style>
         /* orderStyles.css */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-}
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
 
-main {
-    max-width: 800px;
-    margin: 20px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.5s ease-in-out;
-}
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
 
-h1, h2 {
-    text-align: center;
-    color: #333;
-}
+        h1,
+        h2 {
+            text-align: center;
+            color: #333;
+        }
 
-.user-info, .discount-code {
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
+        .user-info,
+        .discount-code {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-p {
-    margin: 8px 0;
-    font-size: 16px;
-}
+        p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
 
-th, td {
-    padding: 12px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-}
+        th,
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
 
-th {
-    background: #007bff;
-    color: white;
-}
+        th {
+            background: #007bff;
+            color: white;
+        }
 
-tr:hover {
-    background: #f1f1f1;
-    transition: background 0.3s ease;
-}
+        tr:hover {
+            background: #f1f1f1;
+            transition: background 0.3s ease;
+        }
 
-.discount-code input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
+        .discount-code input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
 
-.checkout-btn {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    background: #28a745;
-    color: white;
-    font-size: 18px;
-    text-align: center;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s ease-in-out;
-}
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out;
+        }
 
-.checkout-btn:hover {
-    background: #218838;
-}
+        .checkout-btn:hover {
+            background: #218838;
+        }
 
-/* Responsive */
-@media (max-width: 600px) {
-    main {
-        padding: 15px;
-    }
-    th, td {
-        font-size: 14px;
-    }
-}
+        /* Responsive */
+        @media (max-width: 600px) {
+            main {
+                padding: 15px;
+            }
 
-/* Animaciones */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+            th,
+            td {
+                font-size: 14px;
+            }
+        }
 
+        /* Animaciones */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
 
@@ -128,7 +133,7 @@ tr:hover {
             <p><strong>Email:</strong> [[${user.email}]]</p>
             <p><strong>Dirección:</strong> [[${user.address}]]</p>
         </div>
-        
+
         <h2>Productos en tu Carrito</h2>
         <table>
             <thead>
@@ -150,15 +155,24 @@ tr:hover {
                 </tr>
             </tbody>
         </table>
-        
+
         <p><strong>Total:</strong> [[${total}]] $</p>
-        
+
         <div class="discount-code">
             <label for="affiliateCode">Código de Afiliación / Descuento:</label>
             <input type="text" id="affiliateCode" name="affiliateCode">
         </div>
-        
-        <button class="checkout-btn">Proceder al Pago</button>
+        <form th:action="@{/bordados/orden/crear}" method="post">
+            <button type="submit" class="checkout-btn">Proceder al Pago</button>
+        </form>
+        <!-- Mensajes de error -->
+        <div th:if="${error}" class="error-message">
+            <p th:text="${error}"></p>
+        </div>
+
+        <div th:if="${success}" class="success-message">
+            <p th:text="${success}"></p>
+        </div>
     </main>
 
     <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
