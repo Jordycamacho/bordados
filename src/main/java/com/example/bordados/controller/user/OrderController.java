@@ -5,15 +5,20 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.bordados.DTOs.CartDTO;
+import com.example.bordados.DTOs.CustomizedOrderDetailDto;
 import com.example.bordados.model.Order;
+import com.example.bordados.model.OrderCustom;
+import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.service.CartService;
 import com.example.bordados.service.IUserService;
+import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.OrderServiceImpl;
 
 @Controller
@@ -26,8 +31,10 @@ public class OrderController {
     private final CartService cartService;
     private final IUserService userService;
     private final OrderServiceImpl orderService;
+    private final ProductService productService;
 
-    public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService) {
+    public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService, ProductService productService) {
+        this.productService = productService;
         this.cartService = cartService;
         this.userService = userService;
         this.orderService = orderService;
@@ -59,11 +66,32 @@ public class OrderController {
             Order order = orderService.createOrder(user.getId());
             redirectAttributes.addFlashAttribute("success",
                     "Orden creada exitosamente. Número de seguimiento: " + order.getTrackingNumber());
-            //return "redirect:/bordados/orden/detalle/" + order.getId();
+            // return "redirect:/bordados/orden/detalle/" + order.getId();
             return "redirect:/bordados";
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", "No puedes crear una orden con el carrito vacío.");
             return "redirect:/bordados/orden";
         }
+    }
+
+    @PostMapping("/createCustomOrder")
+    public String createOrderCustom(@ModelAttribute CustomizedOrderDetailDto customOrderDetail,
+            RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentUser();
+
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "Debes iniciar sesión para realizar una compra.");
+            return "redirect:/login";
+        }
+
+        // Asignar el producto al DTO
+        Product product = productService.getProductById(customOrderDetail.getProductId());
+        customOrderDetail.setProduct(product);
+
+        // Crear la orden personalizada
+        OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
+        redirectAttributes.addFlashAttribute("success",
+                "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
+        return "redirect:/bordados";
     }
 }
