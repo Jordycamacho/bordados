@@ -29,150 +29,148 @@
 
 
 
-                <form th:if="${product.quantity > 0}" th:action="@{/bordados/producto/save}" method="post"
+                <form th:if="${product.quantity > 0}" th:action="@{/bordados/orden/createCustomOrder}" method="post"
                     enctype="multipart/form-data" onsubmit="validateForm(event)">
-                    <input type="hidden" name="productId" th:value="${product.id}">
-
-                    <!-- Cantidad -->
-                    <div class="form-group">
-                        <label>Cantidad</label>
-                        <div class="quantity-selector">
-                            <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">-</button>
-                            <input type="number" name="quantity" id="quantity" th:max="${product.quantity}" value="1"
-                                min="1" class="quantity-input">
-                            <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
-                        </div>
-                    </div>
-
-                    <p th:text="'Disponibles: ' + ${product.quantity}"></p>
-
-                    <!-- Color -->
-                    <div class="form-group">
-                        <label>Elige el color de tu prenda*</label>
-                        <div class="color-options">
-                            <button th:each="color : ${product.colors}" th:data-color="${color}" class="color-option"
-                                th:style="'background-color: ' + ${color} + ';'" onclick="selectColor(event)">
-                            </button>
-                        </div>
-                        <input type="hidden" name="color" id="selectedColor">
-                    </div>
-
-                    <!-- Talla -->
-                    <div class="form-group">
-                        <label>Elige tu talla*</label>
-                        <div class="size-options">
-                            <button th:each="size : ${product.sizes}" th:data-size="${size}" class="size-option"
-                                onclick="selectSize(event)">
-                                [[${size}]]
-                            </button>
-                        </div>
-                        <input type="hidden" name="size" id="selectedSize">
-                    </div>
-
-                    <!-- Primer bordado -->
-                    <div class="form-group">
-                        <label>¿Qué primer diseño quieres bordar?*</label>
-                        <input type="file" name="firstEmbroideryFile" class="file-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>¿Qué tipo de bordado quieres?*</label>
-                        <select name="embroideryType" class="form-select" required>
-                            <option value="standard">Bordado estándar</option>
-                            <option value="premium">Bordado premium</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>¿Dónde quieres tu primer bordado?*</label>
-                        <div class="placement-options">
-                            <button type="button" class="placement-option" data-placement="left"
-                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado izquierdo</button>
-                            <button type="button" class="placement-option" data-placement="center"
-                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Medio del pecho</button>
-                            <button type="button" class="placement-option" data-placement="back"
-                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Espalda</button>
-                        </div>
-                        <input type="hidden" name="firstEmbroideryPlacement" id="firstEmbroideryPlacement">
-                    </div>
-
-                    <!-- Observaciones -->
-                    <div class="form-group">
-                        <label>Observaciones</label>
-                        <textarea name="observations" class="form-textarea"
-                            placeholder="Escribe aquí tus observaciones..."></textarea>
-                    </div>
-
-                    <!-- Segundo bordado (opcional) -->
-                    <div class="form-group">
-                        <label>¿Quieres un segundo bordado en tu prenda?</label>
-                        <div class="radio-options">
-                            <label><input type="radio" name="hasSecondEmbroidery" value="true"
-                                    onclick="toggleSection('second-embroidery-section', true)"> Sí</label>
-                            <label><input type="radio" name="hasSecondEmbroidery" value="false"
-                                    onclick="toggleSection('second-embroidery-section', false)" checked> No</label>
-                        </div>
-                    </div>
-
-                    <div id="second-embroidery-section" class="hidden">
-                        <div class="form-group">
-                            <label>Sube tu segundo diseño*</label>
-                            <input type="file" name="secondEmbroideryFile" class="file-input">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Tipo de bordado</label>
-                            <select name="secondEmbroideryType" class="form-select">
-                                <option value="standard">Bordado estándar</option>
-                                <option value="premium">Bordado premium</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Ubicación del segundo bordado</label>
-                            <input type="text" name="secondEmbroideryPlacement" class="form-input">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Observaciones</label>
-                            <textarea name="observationsSecondEmbroidery" class="form-textarea"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Bordado en manga (opcional) -->
-                    <div class="form-group">
-                        <label>¿Quieres bordar una manga?</label>
-                        <div class="radio-options">
-                            <label><input type="radio" name="hasSleeveEmbroidery" value="true"
-                                    onclick="toggleSection('sleeve-embroidery-section', true)"> Sí</label>
-                            <label><input type="radio" name="hasSleeveEmbroidery" value="false"
-                                    onclick="toggleSection('sleeve-embroidery-section', false)" checked> No</label>
-                        </div>
-                    </div>
-
-                    <div id="sleeve-embroidery-section" class="hidden">
-                        <div class="form-group">
-                            <label>¿En qué manga?</label>
-                            <div class="radio-options">
-                                <label><input type="radio" name="sleeveSide" value="left"> Izquierda</label>
-                                <label><input type="radio" name="sleeveSide" value="right"> Derecha</label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Diseño para la manga</label>
-                            <input type="text" name="sleeveDesign" class="form-input">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Color del hilo</label>
-                            <input type="color" name="sleeveThreadColor" class="color-picker">
-                        </div>
-                    </div>
-
-                    <!-- Botón para enviar -->
-                    <button type="submit">Comprar</button>
-                </form>
+                  <input type="hidden" name="productId" th:value="${product.id}">
+              
+                  <!-- Cantidad -->
+                  <div class="form-group">
+                      <label>Cantidad</label>
+                      <div class="quantity-selector">
+                          <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">-</button>
+                          <input type="number" name="quantity" id="quantity" th:max="${product.quantity}" value="1"
+                                 min="1" class="quantity-input">
+                          <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
+                      </div>
+                  </div>
+              
+                  <!-- Color -->
+                  <div class="form-group">
+                      <label>Elige el color de tu prenda*</label>
+                      <div class="color-options">
+                          <button th:each="color : ${product.colors}" th:data-color="${color}" class="color-option"
+                                  th:style="'background-color: ' + ${color} + ';'" onclick="selectColor(event)">
+                          </button>
+                      </div>
+                      <input type="hidden" name="color" id="selectedColor">
+                  </div>
+              
+                  <!-- Talla -->
+                  <div class="form-group">
+                      <label>Elige tu talla*</label>
+                      <div class="size-options">
+                          <button th:each="size : ${product.sizes}" th:data-size="${size}" class="size-option"
+                                  onclick="selectSize(event)">
+                              [[${size}]]
+                          </button>
+                      </div>
+                      <input type="hidden" name="size" id="selectedSize">
+                  </div>
+              
+                  <!-- Primer bordado -->
+                  <div class="form-group">
+                      <label>¿Qué primer diseño quieres bordar?*</label>
+                      <input type="file" name="firstEmbroideryFile" class="file-input" required>
+                  </div>
+              
+                  <div class="form-group">
+                      <label>¿Qué tipo de bordado quieres?*</label>
+                      <select name="embroideryType" class="form-select" required>
+                          <option value="standard">Bordado estándar</option>
+                          <option value="premium">Bordado premium</option>
+                      </select>
+                  </div>
+              
+                  <div class="form-group">
+                      <label>¿Dónde quieres tu primer bordado?*</label>
+                      <div class="placement-options">
+                          <button type="button" class="placement-option" data-placement="left"
+                                  onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado izquierdo</button>
+                          <button type="button" class="placement-option" data-placement="center"
+                                  onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Medio del pecho</button>
+                          <button type="button" class="placement-option" data-placement="back"
+                                  onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Espalda</button>
+                      </div>
+                      <input type="hidden" name="firstEmbroideryPlacement" id="firstEmbroideryPlacement">
+                  </div>
+              
+                  <!-- Observaciones -->
+                  <div class="form-group">
+                      <label>Observaciones</label>
+                      <textarea name="observationsFirstEmbroidery" class="form-textarea"
+                                placeholder="Escribe aquí tus observaciones..."></textarea>
+                  </div>
+              
+                  <!-- Segundo bordado (opcional) -->
+                  <div class="form-group">
+                      <label>¿Quieres un segundo bordado en tu prenda?</label>
+                      <div class="radio-options">
+                          <label><input type="radio" name="hasSecondEmbroidery" value="true"
+                                        onclick="toggleSection('second-embroidery-section', true)"> Sí</label>
+                          <label><input type="radio" name="hasSecondEmbroidery" value="false"
+                                        onclick="toggleSection('second-embroidery-section', false)" checked> No</label>
+                      </div>
+                  </div>
+              
+                  <div id="second-embroidery-section" class="hidden">
+                      <div class="form-group">
+                          <label>Sube tu segundo diseño*</label>
+                          <input type="file" name="secondEmbroideryFile" class="file-input">
+                      </div>
+              
+                      <div class="form-group">
+                          <label>Tipo de bordado</label>
+                          <select name="secondEmbroideryType" class="form-select">
+                              <option value="standard">Bordado estándar</option>
+                              <option value="premium">Bordado premium</option>
+                          </select>
+                      </div>
+              
+                      <div class="form-group">
+                          <label>Ubicación del segundo bordado</label>
+                          <input type="text" name="secondEmbroideryPlacement" class="form-input">
+                      </div>
+              
+                      <div class="form-group">
+                          <label>Observaciones</label>
+                          <textarea name="observationsSecondEmbroidery" class="form-textarea"></textarea>
+                      </div>
+                  </div>
+              
+                  <!-- Bordado en manga (opcional) -->
+                  <div class="form-group">
+                      <label>¿Quieres bordar una manga?</label>
+                      <div class="radio-options">
+                          <label><input type="radio" name="hasSleeveEmbroidery" value="true"
+                                        onclick="toggleSection('sleeve-embroidery-section', true)"> Sí</label>
+                          <label><input type="radio" name="hasSleeveEmbroidery" value="false"
+                                        onclick="toggleSection('sleeve-embroidery-section', false)" checked> No</label>
+                      </div>
+                  </div>
+              
+                  <div id="sleeve-embroidery-section" class="hidden">
+                      <div class="form-group">
+                          <label>¿En qué manga?</label>
+                          <div class="radio-options">
+                              <label><input type="radio" name="sleeveSide" value="left"> Izquierda</label>
+                              <label><input type="radio" name="sleeveSide" value="right"> Derecha</label>
+                          </div>
+                      </div>
+              
+                      <div class="form-group">
+                          <label>Diseño para la manga</label>
+                          <input type="text" name="sleeveDesign" class="form-input">
+                      </div>
+              
+                      <div class="form-group">
+                          <label>Color del hilo</label>
+                          <input type="color" name="sleeveThreadColor" class="color-picker">
+                      </div>
+                  </div>
+              
+                  <!-- Botón para enviar -->
+                  <button type="submit">Comprar</button>
+              </form>
 
             </div>
         </section>
