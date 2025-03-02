@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+        <!--Contacto-->
+        <div class="contact-container" id="contact">
+            <h1 class="contact-title">CONTACTANOS</h1>
+            <div class="contact-info">
+                <div class="contact-card">
+                    <i class="fas fa-phone">Numero</i>
+                    <h6>+34-658060366</h6>
+                </div>
+                <div class="contact-card">
+                    <i class="fa-solid fa-envelope">Email</i>
+                    <h6>prueba@gmail.com</h6>
+                </div>
+                <div class="contact-card">
+                    <i class="fa-brands fa-instagram">instagram</i>
+                    <h6>@prueba</h6>
+                </div>
+            </div>
+            
+            <form class="contact-form" th:action="@{/email/contact}" method="post">
+                <div class="form-group">
+                    <input type="text" class="form-input" name="nombre" placeholder="Asunto*" required>
+                    <input type="email" class="form-input" name="email" placeholder="Email*" required>
+                    <input type="text" class="form-input" name="numero" placeholder="Numero">
+                    <textarea class="form-textarea" name="mensaje" placeholder="Mensaje*" required></textarea>
+                </div>
+                <div class="form-submit">
+                    <button type="submit" class="submit-button">Enviar</button>
+                </div>
+            </form>
+            <div th:if="${mensajeEnviado}">
+                <p class="success-message">¡Gracias por tu mensaje! Nos pondremos en contacto contigo pronto.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>
