@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Orden Personalizada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header h1 {
+            color: #333333;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content p {
+            color: #555555;
+            line-height: 1.6;
+        }
+        .user-details {
+            margin-bottom: 20px;
+        }
+        .user-details h3 {
+            color: #333333;
+            margin-bottom: 10px;
+        }
+        .product-details {
+            margin-top: 20px;
+        }
+        .product-details h3 {
+            color: #333333;
+            margin-bottom: 10px;
+        }
+        .product-info {
+            margin-bottom: 20px;
+        }
+        .product-info h4 {
+            margin: 0;
+            color: #333333;
+        }
+        .product-info p {
+            margin: 5px 0;
+            color: #555555;
+        }
+        .embroidery-details {
+            margin-top: 20px;
+        }
+        .embroidery-details h4 {
+            color: #333333;
+            margin-bottom: 10px;
+        }
+        .embroidery-details p {
+            margin: 5px 0;
+            color: #555555;
+        }
+        .total {
+            text-align: right;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333333;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #777777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Confirmación de Orden Personalizada #<span th:text="${orderNumber}"></span></h1>
+        </div>
+        <div class="content">
+            <p>Gracias por tu compra, <span th:text="${user.name}"></span>. Aquí están los detalles de tu orden personalizada:</p>
+
+            <!-- Datos del Usuario -->
+            <div class="user-details">
+                <h3>Datos del Usuario</h3>
+                <p><strong>Nombre:</strong> <span th:text="${user.name}"></span></p>
+                <p><strong>Dirección:</strong> <span th:text="${user.address}"></span></p>
+                <p><strong>Correo:</strong> <span th:text="${user.email}"></span></p>
+            </div>
+
+            <!-- Detalles del Producto Personalizado 
+            <div class="product-details">
+                <h3>Producto Personalizado</h3>
+                <div class="product-info">
+                    <h4 th:text="${detail.product.name}"></h4>
+                    <p><strong>Cantidad:</strong> <span th:text="${detail.quantity}"></span></p>
+                    <p><strong>Talla:</strong> <span th:text="${detail.size}"></span></p>
+                    <p><strong>Color:</strong> <span th:text="${detail.color}"></span></p>
+                    <p><strong>Precio Unitario:</strong> <span th:text="${detail.product.price}"></span> €</p>
+                </div>
+            </div>
+
+            <div class="embroidery-details">
+                <h4>Bordado Principal</h4>
+                <p><strong>Tipo:</strong> <span th:text="${detail.embroideryType}"></span></p>
+                <p><strong>Ubicación:</strong> <span th:text="${detail.firstEmbroideryPlacement}"></span></p>
+                <p><strong>Imagen:</strong> <img th:src="@{'/images/' + ${detail.firstEmbroideryFile}}" width="100" class="img-thumbnail"></p>
+                <p><strong>Observaciones:</strong> <span th:text="${detail.observationsFirstEmbroidery}"></span></p>
+            </div>
+
+            <div class="embroidery-details" th:if="${detail.hasSecondEmbroidery}">
+                <h4>Bordado Secundario</h4>
+                <p><strong>Tipo:</strong> <span th:text="${detail.secondEmbroideryType}"></span></p>
+                <p><strong>Ubicación:</strong> <span th:text="${detail.secondEmbroideryPlacement}"></span></p>
+                <p><strong>Imagen:</strong> <img th:src="@{'/images/' + ${detail.secondEmbroideryFile}}" width="100" class="img-thumbnail"></p>
+                <p><strong>Observaciones:</strong> <span th:text="${detail.observationsSecondEmbroidery}"></span></p>
+            </div>
+
+
+            <div class="embroidery-details" th:if="${detail.hasSleeveEmbroidery}">
+                <h4>Bordado en Manga</h4>
+                <p><strong>Lado:</strong> <span th:text="${detail.sleeveSide}"></span></p>
+                <p><strong>Diseño:</strong> <span th:text="${detail.sleeveDesign}"></span></p>
+                <p><strong>Color del hilo:</strong> <span th:text="${detail.sleeveThreadColor}"></span></p>
+            </div>
+
+
+
+
+        -->
+
+
+
+
+            <!-- Total de la Orden -->
+            <div class="total">
+                <h3>Total de la Orden: <span th:text="${total}"></span> €</h3>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+            <p>Equipo de Bordados</p>
+        </div>
+    </div>
+</body>
+</html>
