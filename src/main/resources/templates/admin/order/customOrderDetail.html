@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+<body>
+
+    <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+    <nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+
+    <div class="container mt-4">
+        <h2>Detalles de la Orden Personalizada</h2>
+
+        <!-- Datos del Usuario -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Datos del Usuario</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Nombre:</strong> <span th:text="${orderCustom.user.name}"></span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Dirección:</strong> <span th:text="${orderCustom.user.address}"></span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Correo:</strong> <span th:text="${orderCustom.user.email}"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Personalizados -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Productos Personalizados</h5>
+            </div>
+            <div class="card-body">
+                <div th:each="detail : ${customizedOrderDetails}">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${detail.product.name}"></h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <p><strong>Cantidad:</strong> <span th:text="${detail.quantity}"></span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Talla:</strong> <span th:text="${detail.size}"></span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Color:</strong> <span th:text="${detail.color}"></span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Total:</strong> <span th:text="${detail.quantity * detail.product.price + detail.additionalCost}"></span></p>
+                                </div>
+                            </div>
+
+                            <!-- Bordado Principal -->
+                            <div class="mt-3 pt-3 border-top">
+                                <h6>Bordado Principal</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>Tipo:</strong> <span th:text="${detail.embroideryType}"></span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Ubicación:</strong> <span th:text="${detail.firstEmbroideryPlacement}"></span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Imagen:</strong> <img th:src="@{'/images/' + ${detail.firstEmbroideryFile}}" width="100" class="img-thumbnail"></p>
+                                    </div>
+                                </div>
+                                <p><strong>Observaciones:</strong> <span th:text="${detail.observationsFirstEmbroidery}"></span></p>
+                            </div>
+
+                            <!-- Bordado Secundario -->
+                            <div class="mt-3 pt-3 border-top" th:if="${detail.hasSecondEmbroidery}">
+                                <h6>Bordado Secundario</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>Tipo:</strong> <span th:text="${detail.secondEmbroideryType}"></span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Ubicación:</strong> <span th:text="${detail.secondEmbroideryPlacement}"></span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Imagen:</strong> <img th:src="@{'/images/' + ${detail.secondEmbroideryFile}}" width="100" class="img-thumbnail"></p>
+                                    </div>
+                                </div>
+                                <p><strong>Observaciones:</strong> <span th:text="${detail.observationsSecondEmbroidery}"></span></p>
+                            </div>
+
+                            <!-- Bordado en Manga -->
+                            <div class="mt-3 pt-3 border-top" th:if="${detail.hasSleeveEmbroidery}">
+                                <h6>Bordado en Manga</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>Lado:</strong> <span th:text="${detail.sleeveSide}"></span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Diseño:</strong> <span th:text="${detail.sleeveDesign}"></span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Color del hilo:</strong> <span th:text="${detail.sleeveThreadColor}"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total de la Orden -->
+        <div class="mt-4 text-right">
+            <h4>Total de la Orden: <span class="text-primary" th:text="${orderCustom.total}"></span></

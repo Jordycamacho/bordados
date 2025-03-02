@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+<body>
+
+    <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+    <nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+
+    <div class="container mt-4">
+        <h2>Ver órdenes</h2>
+
+        <!-- Tabla para órdenes normales -->
+        <h3>Órdenes Normales</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>No. de Orden</th>
+                    <th>Fecha</th>
+                    <th>Valor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${orders}">
+                    <td th:text="${order.trackingNumber}"></td>
+                    <td th:text="${order.createdDate}"></td>
+                    <td th:text="${order.total}"></td>
+                    <td>
+                        <a th:href="@{/admin/ordenes/detalle/normal/{id}(id=${order.id})}" class="btn btn-info btn-sm">Ver Detalle</a>
+                        <form th:action="@{/admin/ordenes/complete/{id}(id=${order.id})}" method="post" style="display: inline;">
+                            <input type="hidden" name="type" value="normal">
+                            <button type="submit" class="btn btn-success btn-sm">Marcar como Completada</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Tabla para órdenes personalizadas -->
+        <h3>Órdenes Personalizadas</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>No. de Orden</th>
+                    <th>Fecha</th>
+                    <th>Valor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="customOrder : ${customOrders}">
+                    <td th:text="${customOrder.trackingNumber}"></td>
+                    <td th:text="${customOrder.createdDate}"></td>
+                    <td th:text="${customOrder.total}"></td>
+                    <td>
+                        <a th:href="@{/admin/ordenes/detalle/custom/{id}(id=${customOrder.id})}" class="btn btn-info btn-sm">Ver Detalle</a>
+                        <form th:action="@{/admin/ordenes/complete/{id}(id=${customOrder.id})}" method="post" style="display: inline;">
+                            <input type="hidden" name="type" value="custom">
+                            <button type="submit" class="btn btn-success btn-sm">Marcar como Completada</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{admin/category/templateAdmin.html::script}"></div>
+</body>
+</html>
