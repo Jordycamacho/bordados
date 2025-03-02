@@ -41,7 +41,7 @@ public class EmailService {
 
         helper.setTo(email);
         helper.setSubject("¡Bienvenido a Bordados!");
-        helper.setText(htmlContent, true);
+        helper.setText(htmlContent, true); // true indica que es HTML
 
         mailSender.send(mimeMessage);
     }
