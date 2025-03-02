@@ -29,39 +29,4 @@ public class EmailController {
         return "user/contact";
     }
 
-    @PostMapping("/welcome")
-    public String sendWelcomeEmail(@RequestParam String email, @RequestParam String name) {
-        try {
-            emailService.sendWelcomeEmail(email, name);
-            return "Correo de bienvenida enviado";
-        } catch (Exception e) {
-            return "Error al enviar el correo de bienvenida: " + e.getMessage();
-        }
-    }
-
-    @PostMapping("/orderConfirmation")
-    public String sendOrderConfirmationEmail(
-            @RequestParam String email,
-            @RequestParam String orderNumber,
-            @RequestParam String details) {
-        try {
-            emailService.sendOrderConfirmationEmail(email, orderNumber, details);
-            return "Correo de confirmación de orden enviado";
-        } catch (Exception e) {
-            return "Error al enviar el correo de confirmación: " + e.getMessage();
-        }
-    }
-
-    @PostMapping("/orderShipped")
-    public String sendOrderShippedEmail(
-            @RequestParam String email,
-            @RequestParam String orderNumber,
-            @RequestParam String tracking) {
-        try {
-            emailService.sendOrderShippedEmail(email, orderNumber, tracking);
-            return "Correo de pedido enviado";
-        } catch (Exception e) {
-            return "Error al enviar el correo de pedido enviado: " + e.getMessage();
-        }
-    }
 }

@@ -1,5 +1,7 @@
 package com.example.bordados.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -11,6 +13,9 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
+import com.example.bordados.DTOs.CartDTO;
+import com.example.bordados.model.User;
 @Service
 public class EmailService {
 
@@ -27,7 +32,6 @@ public class EmailService {
         mailMessage.setText("Correo: " + email + "\nTeléfono: " + phone + "\nMensaje: " + message);
         mailSender.send(mailMessage);
     }
-
 
     public void sendWelcomeEmail(String email, String name) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -46,23 +50,26 @@ public class EmailService {
         mailSender.send(mimeMessage);
     }
 
-    public void sendOrderConfirmationEmail(String email, String orderNumber, String details) throws MessagingException {
+    public void sendOrderConfirmationEmail(String email, String orderNumber, User user, List<CartDTO> cartItems, double total) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
         Context context = new Context();
         context.setVariable("orderNumber", orderNumber);
-        context.setVariable("details", details);
+        context.setVariable("user", user);
+        context.setVariable("cartItems", cartItems);
+        context.setVariable("total", total);
 
         String htmlContent = templateEngine.process("emails/orderConfirmation", context);
 
         helper.setTo(email);
         helper.setSubject("Confirmación de Orden #" + orderNumber);
-        helper.setText(htmlContent, true);
+        helper.setText(htmlContent, true); // true indica que es HTML
 
         mailSender.send(mimeMessage);
     }
-
+    
+    
     public void sendOrderShippedEmail(String email, String orderNumber, String tracking) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);

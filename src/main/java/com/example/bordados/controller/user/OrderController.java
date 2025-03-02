@@ -17,9 +17,12 @@ import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.service.CartService;
+import com.example.bordados.service.EmailService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.OrderServiceImpl;
+
+import jakarta.mail.MessagingException;
 
 @Controller
 @RequestMapping("/bordados/orden")
@@ -32,9 +35,11 @@ public class OrderController {
     private final IUserService userService;
     private final OrderServiceImpl orderService;
     private final ProductService productService;
+    private final EmailService emailService;
 
-    public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService, ProductService productService) {
+    public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService, ProductService productService, EmailService emailService) {
         this.productService = productService;
+        this.emailService = emailService;
         this.cartService = cartService;
         this.userService = userService;
         this.orderService = orderService;
@@ -63,13 +68,24 @@ public class OrderController {
         }
 
         try {
+            // Crear la orden
             Order order = orderService.createOrder(user.getId());
+
+            // Obtener los productos del carrito
+            List<CartDTO> cartItems = cartService.getCartByUserId(user.getId());
+
+            // Enviar correo de confirmación de orden
+            emailService.sendOrderConfirmationEmail(user.getEmail(), order.getTrackingNumber(), user, cartItems, order.getTotal());
+
+            // Redirigir con mensaje de éxito
             redirectAttributes.addFlashAttribute("success",
                     "Orden creada exitosamente. Número de seguimiento: " + order.getTrackingNumber());
-            // return "redirect:/bordados/orden/detalle/" + order.getId();
             return "redirect:/bordados";
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", "No puedes crear una orden con el carrito vacío.");
+            return "redirect:/bordados/orden";
+        } catch (MessagingException e) {
+            redirectAttributes.addFlashAttribute("error", "Error al enviar el correo de confirmación.");
             return "redirect:/bordados/orden";
         }
     }
