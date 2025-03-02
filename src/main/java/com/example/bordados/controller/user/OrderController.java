@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.DTOs.CustomizedOrderDetailDto;
+import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.Product;
@@ -37,7 +38,8 @@ public class OrderController {
     private final ProductService productService;
     private final EmailService emailService;
 
-    public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService, ProductService productService, EmailService emailService) {
+    public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
+            ProductService productService, EmailService emailService) {
         this.productService = productService;
         this.emailService = emailService;
         this.cartService = cartService;
@@ -75,7 +77,8 @@ public class OrderController {
             List<CartDTO> cartItems = cartService.getCartByUserId(user.getId());
 
             // Enviar correo de confirmación de orden
-            emailService.sendOrderConfirmationEmail(user.getEmail(), order.getTrackingNumber(), user, cartItems, order.getTotal());
+            emailService.sendOrderConfirmationEmail(user.getEmail(), order.getTrackingNumber(), user, cartItems,
+                    order.getTotal());
 
             // Redirigir con mensaje de éxito
             redirectAttributes.addFlashAttribute("success",
@@ -100,14 +103,24 @@ public class OrderController {
             return "redirect:/login";
         }
 
-        // Asignar el producto al DTO
-        Product product = productService.getProductById(customOrderDetail.getProductId());
-        customOrderDetail.setProduct(product);
+        try {
+            Product product = productService.getProductById(customOrderDetail.getProductId());
+            customOrderDetail.setProduct(product);
 
-        // Crear la orden personalizada
-        OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
-        redirectAttributes.addFlashAttribute("success",
-                "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
-        return "redirect:/bordados";
+            OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
+
+            CustomizedOrderDetail detail = orderCustom.getCustomizedOrderDetails().get(0);
+
+            emailService.sendCustomOrderConfirmationEmail(user.getEmail(), orderCustom.getTrackingNumber(), user,
+                    detail, orderCustom.getTotal());
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Orden personalizada creada exitosamente. Número de seguimiento: "
+                            + orderCustom.getTrackingNumber());
+            return "redirect:/bordados";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al crear la orden personalizada: " + e.getMessage());
+            return "redirect:/bordados/producto/personalizar";
+        }
     }
 }
