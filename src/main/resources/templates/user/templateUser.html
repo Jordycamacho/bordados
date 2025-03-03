@@ -133,7 +133,7 @@
     <nav class="navbar">
 
         <div class="logo">
-            <a href="index.html"><img src="images/logo.jpg" alt="OtakuStitch Logo"></a>
+            <a th:href="@{/bordados}"><img src="./images/logo.jpg" alt="Logo"></a>
         </div>
 
         <div class="mobile-icons">
@@ -190,8 +190,8 @@
 
             <li><a href="affiliate.html">Afiliacion</a></li>
             <li><a href="SizeGuide.html">Guía de tallas</a></li>
-            <li><a href="contact.html">Contacto</a></li>
-            <a href="cart.html">
+            <li><a th:href="@{/bordados/contacto}">Contacto</a></li>
+            <a th:href="@{/bordados/carrito}">
                 <button style="--i:#00d9ff;--j:#ffffff;" class="button_like button_like_hidden">
                     <span class="icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -204,7 +204,7 @@
                     <span class="title_like">Carrito</span>
                 </button>
             </a>
-            <a href="like.html">
+            <a th:href="@{/bordados/wishlist}">
                 <button style="--i:#00d9ff;--j:#ffffff;" class="button_like button_like_hidden">
                     <span class="icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
