@@ -13,12 +13,14 @@ import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.OrderDetail;
+import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.model.Enums.ShippingStatus;
 import com.example.bordados.repository.CartRepository;
 import com.example.bordados.repository.OrderCustomRepository;
 import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
+import com.example.bordados.repository.ProductRepository;
 import com.example.bordados.repository.UserRepository;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ImageService;
@@ -37,6 +39,7 @@ public class OrderServiceImpl {
     private final ImageService imageService;
     private final IUserService userService;
     private final OrderCustomRepository orderCustomRepository;
+    private final ProductRepository productRepository;
 
     public Order createOrder(Long userId) {
         User user = userRepository.findById(userId)
@@ -47,17 +50,37 @@ public class OrderServiceImpl {
             throw new IllegalStateException("El carrito está vacío");
         }
 
+        for (Cart cartItem : cartItems) {
+            Product product = cartItem.getProduct();
+            int requestedQuantity = cartItem.getQuantity();
+            int availableQuantity = product.getQuantity(); // Usamos el campo "quantity"
+    
+            if (availableQuantity < requestedQuantity) {
+                throw new IllegalStateException("No hay suficiente cantidad para el producto: " + product.getName());
+            }
+        }
+
         // Crear y guardar la orden
         Order order = new Order();
         order.setUser(user);
         order.setCreatedDate(LocalDateTime.now());
         order.setShippingStatus(ShippingStatus.PENDING);
         order.setTrackingNumber(UUID.randomUUID().toString());
-        order.setTotal(calculateTotal(cartItems));
+
+        long totalInCents = calculateTotal(cartItems);
+        order.setTotal(totalInCents / 100.0); 
+
         Order savedOrder = orderRepository.save(order);
 
         // Crear los detalles de la orden
         createOrderDetails(savedOrder, cartItems);
+
+        for (Cart cartItem : cartItems) {
+            Product product = cartItem.getProduct();
+            int requestedQuantity = cartItem.getQuantity();
+            product.setQuantity(product.getQuantity() - requestedQuantity); // Disminuir la cantidad
+            productRepository.save(product); // Guardar el producto actualizado
+        }
 
         // Vaciar el carrito después de completar la orden
         cartRepository.deleteAll(cartItems);
@@ -65,12 +88,23 @@ public class OrderServiceImpl {
         return savedOrder;
     }
 
-    private double calculateTotal(List<Cart> cartItems) {
-        return cartItems.stream()
+    private long calculateTotal(List<Cart> cartItems) {
+        // Calcular el subtotal de los productos en el carrito
+        double subtotal = cartItems.stream()
                 .mapToDouble(cart -> cart.getProduct().getPrice() * cart.getQuantity())
                 .sum();
+    
+        double shippingCost = 5.00;
+    
+        // Calcular la comisión de Stripe (2.9% + 0.30€)
+        double stripeFee = (subtotal + shippingCost) * 0.029 + 0.30;
+    
+        // Calcular el total final
+        double total = subtotal + shippingCost + stripeFee;
+    
+        // Convertir el total a céntimos
+        return (long) (total * 100);
     }
-
     private void createOrderDetails(Order order, List<Cart> cartItems) {
         for (Cart cart : cartItems) {
             OrderDetail orderDetail = new OrderDetail();

@@ -12,18 +12,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.DTOs.CustomizedOrderDetailDto;
-import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.service.CartService;
-import com.example.bordados.service.EmailService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.OrderServiceImpl;
-
-import jakarta.mail.MessagingException;
 
 @Controller
 @RequestMapping("/bordados/orden")
@@ -36,12 +32,10 @@ public class OrderController {
     private final IUserService userService;
     private final OrderServiceImpl orderService;
     private final ProductService productService;
-    private final EmailService emailService;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
-            ProductService productService, EmailService emailService) {
+            ProductService productService) {
         this.productService = productService;
-        this.emailService = emailService;
         this.cartService = cartService;
         this.userService = userService;
         this.orderService = orderService;
@@ -51,11 +45,16 @@ public class OrderController {
     public String viewOrder(Model model) {
         User user = userService.getCurrentUser();
         List<CartDTO> cartItems = cartService.getCartByUserId(user.getId());
-        double total = cartItems.stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum();
+        double total = cartItems.stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+        double shippingCost = 5.00;
+        double stripeFee = (total + shippingCost) * 0.029 + 0.30;
+        double finalTotal = total + shippingCost + stripeFee;
 
         model.addAttribute("user", user);
         model.addAttribute("cartItems", cartItems);
-        model.addAttribute("total", total);
+        model.addAttribute("total", finalTotal);
 
         return "user/userOrder";
     }
@@ -64,31 +63,13 @@ public class OrderController {
     public String createOrder(RedirectAttributes redirectAttributes) {
         User user = userService.getCurrentUser();
 
-        if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Debes iniciar sesión para realizar una compra.");
-            return "redirect:/login";
-        }
-
         try {
-            // Crear la orden
             Order order = orderService.createOrder(user.getId());
-
-            // Obtener los productos del carrito
-            List<CartDTO> cartItems = cartService.getCartByUserId(user.getId());
-
-            // Enviar correo de confirmación de orden
-            emailService.sendOrderConfirmationEmail(user.getEmail(), order.getTrackingNumber(), user, cartItems,
-                    order.getTotal());
-
-            // Redirigir con mensaje de éxito
             redirectAttributes.addFlashAttribute("success",
                     "Orden creada exitosamente. Número de seguimiento: " + order.getTrackingNumber());
             return "redirect:/bordados";
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", "No puedes crear una orden con el carrito vacío.");
-            return "redirect:/bordados/orden";
-        } catch (MessagingException e) {
-            redirectAttributes.addFlashAttribute("error", "Error al enviar el correo de confirmación.");
             return "redirect:/bordados/orden";
         }
     }
@@ -103,24 +84,14 @@ public class OrderController {
             return "redirect:/login";
         }
 
-        try {
-            Product product = productService.getProductById(customOrderDetail.getProductId());
-            customOrderDetail.setProduct(product);
+        // Asignar el producto al DTO
+        Product product = productService.getProductById(customOrderDetail.getProductId());
+        customOrderDetail.setProduct(product);
 
-            OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
-
-            CustomizedOrderDetail detail = orderCustom.getCustomizedOrderDetails().get(0);
-
-            emailService.sendCustomOrderConfirmationEmail(user.getEmail(), orderCustom.getTrackingNumber(), user,
-                    detail, orderCustom.getTotal());
-
-            redirectAttributes.addFlashAttribute("success",
-                    "Orden personalizada creada exitosamente. Número de seguimiento: "
-                            + orderCustom.getTrackingNumber());
-            return "redirect:/bordados";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al crear la orden personalizada: " + e.getMessage());
-            return "redirect:/bordados/producto/personalizar";
-        }
+        // Crear la orden personalizada
+        OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
+        redirectAttributes.addFlashAttribute("success",
+                "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
+        return "redirect:/bordados";
     }
 }
