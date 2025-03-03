@@ -1833,16 +1833,14 @@ body {
     /*Botones*/
 
     /*boton especial inicio*/
-  
-  .button_home {
-    --fs-size: var(--font-size-medium);
-  }
+    .button_home {
+        --fs-size: var(--font-size-medium);
+    }
 
     /*Boton log In*/
     .Btn_logIn {
         margin: 20px auto;
     }
-
 
     .c-button {
         font-weight: var(--font-size-medium);
@@ -1857,33 +1855,64 @@ body {
         z-index: 1;
         margin-bottom: 10px;
     }
+
     /*nav*/
-    .mobile-icons {
+    .navbar {
         display: flex;
-        gap: 10px;
+        flex-wrap: wrap; /* Permite que los elementos se ajusten en varias líneas */
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
     }
 
+    /* Menú a la izquierda */
+    /* Navbar */
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+    }
+
+    /* Menú hamburguesa */
     .menu-toggle {
-        display: block;
+        display: block; /* Muestra el ícono del menú hamburguesa */
+        order: 1; /* Coloca el menú hamburguesa en la primera posición */
+        cursor: pointer;
     }
 
+    /* Logo en el centro */
+    .logo {
+        order: 2; /* Coloca el logo en la segunda posición */
+        flex: 1; /* Ocupa el espacio disponible */
+        text-align: center; /* Centra el logo */
+    }
+
+    /* Íconos de carrito y favoritos a la derecha */
+    .mobile-icons {
+        display: flex; /* Muestra los íconos */
+        gap: 10px; /* Espacio entre los íconos */
+        order: 3; /* Coloca los íconos en la tercera posición */
+    }
+
+    /* Menú principal */
     .nav-links {
-        display: none;
+        display: none; /* Oculta el menú por defecto */
         flex-direction: column;
         position: fixed;
         top: 0;
-        right: -70%;
+        left: -70%; /* Menú desplegable desde la izquierda */
         height: 100%;
         width: 70%;
         background-color: var(--primary-color);
         padding-top: 60px;
-        transition: right var(--transition-speed);
+        transition: left var(--transition-speed);
         z-index: 1000;
     }
 
     .nav-links.active {
-        display: flex;
-        right: 0;
+        display: flex; /* Muestra el menú desplegable */
+        left: 0;
     }
 
     .nav-links li {
@@ -1904,6 +1933,7 @@ body {
         border-radius: 0;
     }
 
+    /* Botones ocultos en móviles */
     .button_like_hidden {
         display: none;
     }
