@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsualización del Bordado</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        .preview-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .product-preview {
+            position: relative;
+            display: inline-block;
+            max-width: 90%;
+            width: 300px;
+            height: auto;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .overlay-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            width: 100px;
+            height: auto;
+            display: none;
+        }
+
+        .overlay-image {
+            width: 100%;
+            height: auto;
+        }
+
+        /* Nuevo diseño del control de redimensionamiento */
+        .resize-handle {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #007bff;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            cursor: nwse-resize;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resize-handle::before {
+            content: "↘";
+            color: #007bff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            margin-top: 20px;
+        }
+
+        .button-group {
+            margin-top: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+        <section class="preview-container">
+            <h1>Previsualiza tu Bordado</h1>
+            
+            <!-- Imagen del producto con el bordado -->
+            <div class="product-preview" id="previewArea">
+                <img id="productImage" th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
+                <div id="overlayContainer" class="overlay-container">
+                    <img id="embroideryPreview" class="overlay-image">
+                    <div class="resize-handle" id="resizeHandle"></div>
+                </div>
+            </div>
+
+            <!-- Input para subir bordado -->
+            <div class="upload-section">
+                <label>Sube tu imagen de bordado:</label>
+                <input type="file" accept="image/*" onchange="previewEmbroidery(event)">
+            </div>
+
+            <!-- Botones -->
+            <div class="button-group">
+                <button class="button" onclick="downloadPreview()">Descargar imagen</button>
+                <a href="javascript:history.back()" class="button">Volver</a>
+            </div>
+        </section>
+    </main>
+
+    <footer th:insert="~{user/templateUser.html::footer}"></footer>
+
+    <script>
+        let overlayContainer = document.getElementById('overlayContainer');
+        let embroideryPreview = document.getElementById('embroideryPreview');
+        let productImage = document.getElementById('productImage');
+        let resizeHandle = document.getElementById('resizeHandle');
+        let isDragging = false, isResizing = false;
+        let startX, startY, initialX, initialY, initialWidth, initialHeight;
+
+        function previewEmbroidery(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    embroideryPreview.src = e.target.result;
+                    overlayContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Permite mover la imagen del bordado
+        overlayContainer.addEventListener('mousedown', function(event) {
+            if (event.target.classList.contains('resize-handle')) {
+                isResizing = true;
+                startX = event.clientX;
+                startY = event.clientY;
+                initialWidth = overlayContainer.offsetWidth;
+                initialHeight = overlayContainer.offsetHeight;
+            } else {
+                isDragging = true;
+                startX = event.clientX;
+                startY = event.clientY;
+                initialX = overlayContainer.offsetLeft;
+                initialY = overlayContainer.offsetTop;
+            }
+        });
+
+        document.addEventListener('mousemove', function(event) {
+            if (isDragging) {
+                let dx = event.clientX - startX;
+                let dy = event.clientY - startY;
+                overlayContainer.style.left = initialX + dx + 'px';
+                overlayContainer.style.top = initialY + dy + 'px';
+            }
+
+            if (isResizing) {
+                let dx = event.clientX - startX;
+                let dy = event.clientY - startY;
+                overlayContainer.style.width = initialWidth + dx + 'px';
+                overlayContainer.style.height = 'auto'; // Mantiene la proporción
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            isResizing = false;
+        });
+
+        // Esperar a que ambas imágenes estén cargadas antes de descargar
+        function downloadPreview() {
+            // Ocultar el botón de redimensionamiento antes de capturar la imagen
+            resizeHandle.style.display = "none";
+
+            // Esperar que ambas imágenes estén listas antes de capturar
+            Promise.all([
+                loadImage(productImage.src),
+                loadImage(embroideryPreview.src)
+            ]).then(() => {
+                html2canvas(document.getElementById("previewArea"), { 
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: true,
+                    scale: 2  // Mejor calidad de imagen
+                }).then(canvas => {
+                    let link = document.createElement("a");
+                    link.href = canvas.toDataURL("image/png");
+                    link.download = "bordado_preview.png";
+                    link.click();
+
+                    // Volver a mostrar el botón después de la captura
+                    resizeHandle.style.display = "flex";
+                });
+            }).catch(err => console.error("Error cargando imágenes: ", err));
+        }
+
+        // Función para esperar a que las imágenes se carguen
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                if (!src || src === "") resolve(); // Si no hay imagen, continuar
+                let img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = src;
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+        }
+    </script>
+
+</body>
+
+</html>
