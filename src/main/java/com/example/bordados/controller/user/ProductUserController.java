@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+
 @Controller
 @RequestMapping("/bordados/producto/")
 public class ProductUserController {
@@ -43,7 +44,7 @@ public class ProductUserController {
     public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
         return categoryService.getAllCategoriesWithSubCategories();
     }
-    
+
     @GetMapping("/vista/{id}")
     @Operation(summary = "Ver producto", description = "Muestra la vista del producto con detalles básicos.")
     public String viewProduct(@PathVariable Long id, Model model) {
@@ -60,11 +61,10 @@ public class ProductUserController {
     @GetMapping("/personalizar/{id}")
     public String viewProductCustom(@PathVariable Long id, Model model) {
         Product product = productService.getProductById(id);
-        
+
         model.addAttribute("product", product);
         return "user/productCustom";
     }
-
 
     @Operation(summary = "Guardar personalización de un producto")
     @ApiResponses(value = {
@@ -74,15 +74,21 @@ public class ProductUserController {
     @PostMapping("/save")
     public String saveCustomization(
             @ModelAttribute @Valid CustomizedProductDTO dto) {
-        
+
         log.info("Recibiendo solicitud para personalizar producto con ID: {}", dto.getProductId());
-        
+
         CustomizedProductDTO savedProduct = customizationService.saveCustomization(dto);
 
         log.info("Producto personalizado guardado con éxito. ID: {}", savedProduct.getProductId());
 
         return "redirect:/bordados/orden";
     }
-  
-    
+
+    @GetMapping("/preview/{id}")
+    public String previewEmbroidery(@PathVariable Long id, Model model) {
+        Product product = productService.getProductById(id);
+
+        model.addAttribute("product", product);
+        return "user/previewEmbroidery";
+    }
 }
