@@ -1,6 +1,8 @@
 package com.example.bordados.service.ServiceImpl;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +26,7 @@ import com.example.bordados.repository.ProductRepository;
 import com.example.bordados.repository.UserRepository;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ImageService;
+import com.stripe.exception.StripeException;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -40,23 +43,25 @@ public class OrderServiceImpl {
     private final IUserService userService;
     private final OrderCustomRepository orderCustomRepository;
     private final ProductRepository productRepository;
+    private final StripeService stripeService;
 
-    public Order createOrder(Long userId) {
+    public Order createOrder(Long userId, String paymentIntentId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario con ID " + userId + " no encontrado"));
 
         List<Cart> cartItems = cartRepository.findByUser(user);
         if (cartItems.isEmpty()) {
-            throw new IllegalStateException("El carrito está vacío");
+            throw new IllegalArgumentException("El carrito está vacío");
         }
 
         for (Cart cartItem : cartItems) {
             Product product = cartItem.getProduct();
             int requestedQuantity = cartItem.getQuantity();
-            int availableQuantity = product.getQuantity(); // Usamos el campo "quantity"
-    
+            int availableQuantity = product.getQuantity();
+
             if (availableQuantity < requestedQuantity) {
-                throw new IllegalStateException("No hay suficiente cantidad para el producto: " + product.getName());
+                throw new IllegalStateException("No hay suficiente cantidad para el producto: " + product.getName() +
+                        ". Disponible: " + availableQuantity + ", solicitado: " + requestedQuantity);
             }
         }
 
@@ -66,45 +71,60 @@ public class OrderServiceImpl {
         order.setCreatedDate(LocalDateTime.now());
         order.setShippingStatus(ShippingStatus.PENDING);
         order.setTrackingNumber(UUID.randomUUID().toString());
+        order.setPaymentIntentId(paymentIntentId);
 
         long totalInCents = calculateTotal(cartItems);
-        order.setTotal(totalInCents / 100.0); 
+        order.setTotal(totalInCents / 100.0);
 
         Order savedOrder = orderRepository.save(order);
+
+        try {
+            String clientSecret = stripeService.createPaymentIntent(totalInCents, "usd", savedOrder.getId());
+            savedOrder.setClientSecret(clientSecret);
+            orderRepository.save(savedOrder);
+        } catch (StripeException e) {
+            throw new RuntimeException("Error creando el pago con Stripe: " + e.getMessage(), e);
+        }
 
         // Crear los detalles de la orden
         createOrderDetails(savedOrder, cartItems);
 
+        // Actualizar el inventario
+        List<Product> updatedProducts = new ArrayList<>();
         for (Cart cartItem : cartItems) {
             Product product = cartItem.getProduct();
             int requestedQuantity = cartItem.getQuantity();
-            product.setQuantity(product.getQuantity() - requestedQuantity); // Disminuir la cantidad
-            productRepository.save(product); // Guardar el producto actualizado
+            product.setQuantity(product.getQuantity() - requestedQuantity);
+            updatedProducts.add(product);
         }
+        productRepository.saveAll(updatedProducts);
 
-        // Vaciar el carrito después de completar la orden
-        cartRepository.deleteAll(cartItems);
+        // Vaciar el carrito
+        cartRepository.deleteAllInBatch(cartItems);
 
         return savedOrder;
     }
 
     private long calculateTotal(List<Cart> cartItems) {
-        // Calcular el subtotal de los productos en el carrito
-        double subtotal = cartItems.stream()
-                .mapToDouble(cart -> cart.getProduct().getPrice() * cart.getQuantity())
-                .sum();
-    
-        double shippingCost = 5.00;
-    
+        BigDecimal subtotal = cartItems.stream()
+                .map(cart -> BigDecimal.valueOf(cart.getProduct().getPrice())
+                        .multiply(BigDecimal.valueOf(cart.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal shippingCost = BigDecimal.valueOf(5.00);
+
         // Calcular la comisión de Stripe (2.9% + 0.30€)
-        double stripeFee = (subtotal + shippingCost) * 0.029 + 0.30;
-    
+        BigDecimal stripeFee = subtotal.add(shippingCost)
+                .multiply(BigDecimal.valueOf(0.029))
+                .add(BigDecimal.valueOf(0.30));
+
         // Calcular el total final
-        double total = subtotal + shippingCost + stripeFee;
-    
+        BigDecimal total = subtotal.add(shippingCost).add(stripeFee);
+
         // Convertir el total a céntimos
-        return (long) (total * 100);
+        return total.multiply(BigDecimal.valueOf(100)).longValue();
     }
+    
     private void createOrderDetails(Order order, List<Cart> cartItems) {
         for (Cart cart : cartItems) {
             OrderDetail orderDetail = new OrderDetail();

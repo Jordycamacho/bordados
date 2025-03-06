@@ -34,6 +34,10 @@ public class Order {
     @NotNull(message = "Total is required")
     private double total;
 
+    private String clientSecret; 
+
+    private String paymentIntentId;
+    
     @Enumerated(EnumType.STRING)
     private ShippingStatus shippingStatus; // PENDING, SHIPPED, IN_TRANSIT, DELIVERED, CANCELED
 
