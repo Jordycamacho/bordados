@@ -6,48 +6,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAST</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-
-<body>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
-        /* orderStyles.css */
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
+        /* Estilos básicos y neutros */
         main {
-            max-width: 800px;
+            max-width: 80%;
             margin: 20px auto;
-            background: white;
+            background: #fff;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.5s ease-in-out;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         h1,
         h2 {
             text-align: center;
-            color: #333;
-        }
-
-        .user-info,
-        .discount-code {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
+            color: #000;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        p {
-            margin: 8px 0;
-            font-size: 16px;
+        .user-info {
+            margin-bottom: 20px;
+        }
+
+        .user-info p {
+            margin: 5px 0;
+        }
+
+        /* Contenedor con dos columnas para desktop */
+        .order-summary {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .order-details {
+            flex: 1 1 55%;
+            padding: 10px;
+        }
+
+        .payment-section {
+            flex: 1 1 40%;
+            padding: 10px;
+            border-left: 1px solid #ddd;
+        }
+
+        /* En móvil, se apilan las columnas */
+        @media (max-width: 768px) {
+            .order-summary {
+                flex-direction: column;
+            }
+
+            .payment-section {
+                border-left: none;
+                border-top: 1px solid #ddd;
+                margin-top: 20px;
+            }
         }
 
         table {
@@ -58,126 +72,161 @@
 
         th,
         td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
 
         th {
-            background: #007bff;
-            color: white;
-        }
-
-        tr:hover {
-            background: #f1f1f1;
-            transition: background 0.3s ease;
-        }
-
-        .discount-code input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            background: #f4f4f4;
+            font-weight: bold;
         }
 
         .checkout-btn {
-            display: block;
             width: 100%;
             padding: 12px;
-            background: #28a745;
-            color: white;
-            font-size: 18px;
-            text-align: center;
+            background: #000;
+            color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.3s ease-in-out;
+            margin-top: 10px;
+            font-size: 16px;
         }
 
         .checkout-btn:hover {
-            background: #218838;
+            background: #333;
         }
 
-        /* Responsive */
-        @media (max-width: 600px) {
-            main {
-                padding: 15px;
-            }
-
-            th,
-            td {
-                font-size: 14px;
-            }
+        /* Estilos para la sección de pago con Stripe */
+        #card-element {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: #fff;
         }
 
-        /* Animaciones */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
+        #card-errors {
+            color: #e74c3c;
+            margin-top: 10px;
+            min-height: 20px;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .hidden {
+            display: none;
         }
     </style>
+</head>
+
+<body>
     <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
 
     <main>
         <h1>Resumen de tu Orden</h1>
-        <div class="user-info">
-            <p><strong>Nombre:</strong> [[${user.name}]]</p>
-            <p><strong>Email:</strong> [[${user.email}]]</p>
-            <p><strong>Dirección:</strong> [[${user.address}]]</p>
-        </div>
+        <div class="order-summary">
+            <div class="order-details">
+                <p><strong>Nombre:</strong> [[${user.name}]]</p>
+                <p><strong>Email:</strong> [[${user.email}]]</p>
+                <p><strong>Dirección:</strong> [[${user.address}]]</p>
+                <h2>Productos en tu Carrito</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Talla</th>
+                            <th>Color</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${cartItems}">
+                            <td>[[${item.productName}]]</td>
+                            <td>[[${item.quantity}]]</td>
+                            <td>[[${item.size}]]</td>
+                            <td>[[${item.color}]]</td>
+                            <td>[[${item.price}]] $</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p><strong>Total:</strong> [[${total}]] $</p>
+            </div>
 
-        <h2>Productos en tu Carrito</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Talla</th>
-                    <th>Color</th>
-                    <th>Precio</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="item : ${cartItems}">
-                    <td>[[${item.productName}]]</td>
-                    <td>[[${item.quantity}]]</td>
-                    <td>[[${item.size}]]</td>
-                    <td>[[${item.color}]]</td>
-                    <td>[[${item.price}]] $</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <p><strong>Total:</strong> [[${total}]] $</p>
-
-        <div class="discount-code">
-            <label for="affiliateCode">Código de Afiliación / Descuento:</label>
-            <input type="text" id="affiliateCode" name="affiliateCode">
-        </div>
-        <form th:action="@{/bordados/orden/crear}" method="post">
-            <button type="submit" class="checkout-btn">Proceder al Pago</button>
-        </form>
-        <!-- Mensajes de error -->
-        <div th:if="${error}" class="error-message">
-            <p th:text="${error}"></p>
-        </div>
-
-        <div th:if="${success}" class="success-message">
-            <p th:text="${success}"></p>
+            <div class="payment-section">
+                <h2>Pago con Tarjeta</h2>
+                <form id="payment-form">
+                    <div id="card-element"></div>
+                    <div id="card-errors" role="alert"></div>
+                    <button id="submit" class="checkout-btn">Pagar</button>
+                    <div id="payment-message" class="hidden"></div>
+                </form>
+            </div>
         </div>
     </main>
 
-    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+    <footer th:insert="~{user/templateUser.html::footer}"></footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const stripePublicKey = "[[${stripePublicKey}]]";
+            const clientSecret = "[[${clientSecret}]]";
 
-    <div th:insert="~{user/templateUser.html::script}"></div>
+            if (!stripePublicKey || !clientSecret) {
+                console.error("Clave pública de Stripe o Client Secret no encontrados.");
+                return;
+            }
+
+            const stripe = Stripe(stripePublicKey);
+            const elements = stripe.elements();
+            const cardElement = elements.create("card");
+            cardElement.mount("#card-element");
+
+            const form = document.getElementById("payment-form");
+            const submitButton = document.getElementById("submit");
+
+            form.addEventListener("submit", async function (event) {
+                event.preventDefault();
+                submitButton.disabled = true;
+
+                const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                    }
+                });
+
+                if (error) {
+                    document.getElementById("card-errors").textContent = error.message;
+                    submitButton.disabled = false;
+                } else {
+                    // Llamar al backend para crear la orden
+                    fetch("/bordados/orden/crear", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("Error en la respuesta del servidor");
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                window.location.href = data.redirectUrl; // Redirige usando la URL del backend
+                            } else {
+                                throw new Error(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert(error.message || "Hubo un error al procesar la orden.");
+                        });
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
