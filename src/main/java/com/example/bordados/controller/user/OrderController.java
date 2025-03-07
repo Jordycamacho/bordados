@@ -133,4 +133,9 @@ public class OrderController {
                 "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
         return "redirect:/bordados";
     }
+
+    @GetMapping("/tracking")
+    public String viewOrderTracking() {
+        return "user/userOrderTracking";
+    }
 }

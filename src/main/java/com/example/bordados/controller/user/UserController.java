@@ -135,4 +135,13 @@ public class UserController {
         }
     }
 
+    @GetMapping("/afiliacion")
+    public String getviewAffiliation() {
+        return "user/affiliate";
+    }
+
+    @GetMapping("/guia")
+    public String getviewGuide() {
+        return "user/SizeGuide";
+    }
 }
