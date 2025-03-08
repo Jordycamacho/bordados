@@ -72,8 +72,8 @@ public class CustomizedOrderDetail {
 
     public double calculateAdditionalCost() {
         double extraCost = 0.0;
-        if (hasSecondEmbroidery) extraCost += 23.0;
-        if (hasSleeveEmbroidery) extraCost += 15.0;
+        if (hasSecondEmbroidery) extraCost += 10.0;
+        if (hasSleeveEmbroidery) extraCost += 3.0;
         return extraCost;
     }
 }

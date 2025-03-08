@@ -106,22 +106,11 @@ public class OrderServiceImpl {
     }
 
     private long calculateTotal(List<Cart> cartItems) {
-        BigDecimal subtotal = cartItems.stream()
+        BigDecimal total = cartItems.stream()
                 .map(cart -> BigDecimal.valueOf(cart.getProduct().getPrice())
                         .multiply(BigDecimal.valueOf(cart.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal shippingCost = BigDecimal.valueOf(5.00);
-
-        // Calcular la comisión de Stripe (2.9% + 0.30€)
-        BigDecimal stripeFee = subtotal.add(shippingCost)
-                .multiply(BigDecimal.valueOf(0.029))
-                .add(BigDecimal.valueOf(0.30));
-
-        // Calcular el total final
-        BigDecimal total = subtotal.add(shippingCost).add(stripeFee);
-
-        // Convertir el total a céntimos
         return total.multiply(BigDecimal.valueOf(100)).longValue();
     }
     
@@ -196,4 +185,6 @@ public class OrderServiceImpl {
 
         return orderCustom;
     }
+
+
 }

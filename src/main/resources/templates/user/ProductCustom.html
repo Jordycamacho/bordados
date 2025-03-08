@@ -8,31 +8,40 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .preview-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .preview-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 
 <body>
     <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
-
     <main>
-
         <section class="product-display">
             <!-- Foto Principal del Producto -->
             <div class="product-image">
                 <img th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
             </div>
-
             <div class="product-form">
                 <h1 th:text="${product.name}"></h1>
                 <p class="product-description" th:text="${product.description}"></p>
                 <p class="product-price" th:text="${product.price} + '0 $'"></p>
 
-
-
-
                 <form th:if="${product.quantity > 0}" th:action="@{/bordados/orden/createCustomOrder}" method="post"
                     enctype="multipart/form-data" onsubmit="validateForm(event)">
                     <input type="hidden" name="productId" th:value="${product.id}">
-
                     <!-- Cantidad -->
                     <div class="form-group">
                         <label>Cantidad</label>
@@ -43,7 +52,6 @@
                             <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
                         </div>
                     </div>
-
                     <!-- Color -->
                     <div class="form-group">
                         <label>Elige el color de tu prenda*</label>
@@ -54,7 +62,6 @@
                         </div>
                         <input type="hidden" name="color" id="selectedColor">
                     </div>
-
                     <!-- Talla -->
                     <div class="form-group">
                         <label>Elige tu talla*</label>
@@ -66,44 +73,41 @@
                         </div>
                         <input type="hidden" name="size" id="selectedSize">
                     </div>
-
                     <!-- Primer bordado -->
                     <div class="form-group">
                         <label>¿Qué primer diseño quieres bordar?*</label>
                         <input type="file" name="firstEmbroideryFile" class="file-input" required>
                     </div>
-
                     <div class="form-group">
-                        <label>¿Qué tipo de bordado quieres?*</label>
+                        <label>¿Qué tamaño de bordado quieres?*</label>
                         <select name="embroideryType" class="form-select" required>
-                            <option value="standard">Bordado estándar</option>
-                            <option value="premium">Bordado premium</option>
+                            <option value="Pequeño">Pequeño(10*10 cm)</option>
+                            <option value="Mediano">Mediano(15*15 cm) + 3 EUR</option>
+                            <option value="Grande">Grande(20*20 cm) + 7 EUR</option>
                         </select>
                     </div>
-
                     <div class="form-group">
                         <label>¿Dónde quieres tu primer bordado?*</label>
                         <div class="placement-options">
-                            <button type="button" class="placement-option" data-placement="left"
+                            <button type="button" class="placement-option" data-placement="Lado izquierdo"
                                 onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado izquierdo</button>
-                            <button type="button" class="placement-option" data-placement="center"
-                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Medio del pecho</button>
-                            <button type="button" class="placement-option" data-placement="back"
-                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Espalda</button>
+                            <button type="button" class="placement-option" data-placement="Medio del
+                            pecho" onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Medio del
+                                pecho</button>
+                            <button type="button" class="placement-option" data-placement="Lado derecho"
+                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado derecho</button>
                         </div>
                         <input type="hidden" name="firstEmbroideryPlacement" id="firstEmbroideryPlacement">
                     </div>
-
                     <!-- Observaciones -->
                     <div class="form-group">
                         <label>Observaciones</label>
                         <textarea name="observationsFirstEmbroidery" class="form-textarea"
                             placeholder="Escribe aquí tus observaciones..."></textarea>
                     </div>
-
                     <!-- Segundo bordado (opcional) -->
                     <div class="form-group">
-                        <label>¿Quieres un segundo bordado en tu prenda?</label>
+                        <label>¿Quieres un segundo bordado en tu prenda? + 10 EUR</label>
                         <div class="radio-options">
                             <label><input type="radio" name="hasSecondEmbroidery" value="true"
                                     onclick="toggleSection('second-embroidery-section', true)"> Sí</label>
@@ -111,35 +115,47 @@
                                     onclick="toggleSection('second-embroidery-section', false)" checked> No</label>
                         </div>
                     </div>
-
                     <div id="second-embroidery-section" class="hidden">
                         <div class="form-group">
-                            <label>Sube tu segundo diseño*</label>
+                            <label>¿Qué segundo diseño quieres bordar?*</label>
                             <input type="file" name="secondEmbroideryFile" class="file-input">
                         </div>
-
                         <div class="form-group">
-                            <label>Tipo de bordado</label>
-                            <select name="secondEmbroideryType" class="form-select">
-                                <option value="standard">Bordado estándar</option>
-                                <option value="premium">Bordado premium</option>
+                            <label>¿Qué tamaño de bordado quieres?*</label>
+                            <select name="secondEmbroideryType" class="form-select" required>
+                                <option value="Pequeño">Pequeño(10*10 cm)</option>
+                                <option value="Mediano">Mediano(15*15 cm) + 3 EUR</option>
+                                <option value="Grande">Grande(20*20 cm) + 7 EUR</option>
                             </select>
                         </div>
-
                         <div class="form-group">
-                            <label>Ubicación del segundo bordado</label>
-                            <input type="text" name="secondEmbroideryPlacement" class="form-input">
+                            <label>¿Dónde quieres tu segundo bordado?*</label>
+                            <div class="placement-options">
+                                <button type="button" class="placement-option" data-placement="Lado izquierdo"
+                                    onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Lado
+                                    izquierdo</button>
+                                <button type="button" class="placement-option" data-placement="Medio del
+                                pecho" onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Medio del
+                                    pecho</button>
+                                <button type="button" class="placement-option" data-placement="Lado derecho"
+                                    onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Lado derecho</button>
+                                <button type="button" class="placement-option" data-placement="Hombro
+                                izquierdo" onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Hombro
+                                    izquierdo</button>
+                                <button type="button" class="placement-option" data-placement="Hombro derecho"
+                                    onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Hombro
+                                    derecho</button>
+                            </div>
+                            <input type="hidden" name="secondEmbroideryPlacement" id="secondEmbroideryPlacement">
                         </div>
-
                         <div class="form-group">
                             <label>Observaciones</label>
                             <textarea name="observationsSecondEmbroidery" class="form-textarea"></textarea>
                         </div>
                     </div>
-
                     <!-- Bordado en manga (opcional) -->
                     <div class="form-group">
-                        <label>¿Quieres bordar una manga?</label>
+                        <label>¿Quieres bordar una manga? + 3 EUR</label>
                         <div class="radio-options">
                             <label><input type="radio" name="hasSleeveEmbroidery" value="true"
                                     onclick="toggleSection('sleeve-embroidery-section', true)"> Sí</label>
@@ -147,41 +163,57 @@
                                     onclick="toggleSection('sleeve-embroidery-section', false)" checked> No</label>
                         </div>
                     </div>
-
                     <div id="sleeve-embroidery-section" class="hidden">
                         <div class="form-group">
-                            <label>¿En qué manga?</label>
+                            <label>¿En qué manga?*</label>
                             <div class="radio-options">
-                                <label><input type="radio" name="sleeveSide" value="left"> Izquierda</label>
-                                <label><input type="radio" name="sleeveSide" value="right"> Derecha</label>
+                                <label><input type="radio" name="sleeveSide" value="Manga Izquierda"> Izquierda</label>
+                                <label><input type="radio" name="sleeveSide" value="Manga Derecha"> Derecha</label>
                             </div>
                         </div>
-
+                        <!-- limitar tamaño -->
                         <div class="form-group">
-                            <label>Diseño para la manga</label>
-                            <input type="text" name="sleeveDesign" class="form-input">
+                            <label>Diseño para la manga *</label>
+                            <input type="text" name="sleeveDesign" class="form-input" maxlength="15">
                         </div>
-
                         <div class="form-group">
-                            <label>Color del hilo</label>
-                            <input type="color" name="sleeveThreadColor" class="color-picker">
+                            <label>Color del hilo*</label>
+                            <div class="color-options">
+                                <button type="button" class="color-option" style="background-color: #000000;"
+                                    data-color="Negro" onclick="selectThreadColor('Negro', '#000000')"></button>
+                                <button type="button" class="color-option" style="background-color: #ffffff;"
+                                    data-color="Blanco" onclick="selectThreadColor('Blanco', '#ffffff')"></button>
+                                <button type="button" class="color-option" style="background-color: #ff0000;"
+                                    data-color="Rojo" onclick="selectThreadColor('Rojo', '#ff0000')"></button>
+                                <button type="button" class="color-option" style="background-color: #00ff00;"
+                                    data-color="Verde" onclick="selectThreadColor('Verde', '#00ff00')"></button>
+                                <button type="button" class="color-option" style="background-color: #0000ff;"
+                                    data-color="Azul" onclick="selectThreadColor('Azul', '#0000ff')"></button>
+                                <button type="button" class="color-option" style="background-color: #ffff00;"
+                                    data-color="Amarillo" onclick="selectThreadColor('Amarillo', '#ffff00')"></button>
+                                <button type="button" class="color-option" style="background-color: #ff00ff;"
+                                    data-color="Magenta" onclick="selectThreadColor('Magenta', '#ff00ff')"></button>
+                                <button type="button" class="color-option" style="background-color: #00ffff;"
+                                    data-color="Cian" onclick="selectThreadColor('Cian', '#00ffff')"></button>
+                                <button type="button" class="color-option" style="background-color: #800080;"
+                                    data-color="Morado" onclick="selectThreadColor('Morado', '#800080')"></button>
+                                <button type="button" class="color-option" style="background-color: #ffa500;"
+                                    data-color="Naranja" onclick="selectThreadColor('Naranja', '#ffa500')"></button>
+                            </div>
+                            <input type="hidden" name="sleeveThreadColor" id="selectedThreadColor">
                         </div>
                     </div>
-
-                    <!-- Botón para enviar -->
+                    <!-- nesecita estilos  -->
                     <div class="form-group">
                         <a th:href="@{/bordados/producto/preview/{id}(id=${product.id})}" class="preview-button">
                             ¿Quieres ver cómo quedaría tu bordado?
                         </a>
                     </div>
-
-
+                    <!-- Botón para enviar -->
                     <button type="submit">Comprar</button>
                 </form>
-
             </div>
         </section>
-
         <!-- Guía de Tallas -->
         <section class="size-guide">
             <h2>Guía de Tallas</h2>
@@ -232,7 +264,6 @@
                         </tbody>
                     </table>
                 </div>
-
                 <!-- Tabla para Sudaderas -->
                 <div class="size-table">
                     <h3>Sudaderas</h3>
@@ -282,7 +313,6 @@
             </div>
         </section>
     </main>
-
     <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
     <script>
         function updateQuantity(change) {
@@ -293,41 +323,63 @@
                 quantityInput.value = newValue;
             }
         }
-
+        
         function selectColor(event) {
             event.preventDefault();
             document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
             document.getElementById('selectedColor').value = event.target.dataset.color;
         }
-
+        
         function selectSize(event) {
             event.preventDefault();
             document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
             document.getElementById('selectedSize').value = event.target.dataset.size;
         }
-
+        
         function selectPlacement(event, inputId) {
             event.preventDefault();
+            document.querySelectorAll('.placement-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
             document.getElementById(inputId).value = event.target.dataset.placement;
+        }
+
+        function selectThreadColor(colorName, colorCode) {
+            document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedThreadColor').value = colorName;
         }
 
         function toggleSection(sectionId, show) {
             document.getElementById(sectionId).style.display = show ? "block" : "none";
         }
 
+        
         function validateForm(event) {
             let selectedColor = document.getElementById("selectedColor").value;
             let selectedSize = document.getElementById("selectedSize").value;
+            let firstEmbroideryFile = document.querySelector('input[name="firstEmbroideryFile"]').files.length > 0;
+            let embroideryType = document.querySelector('select[name="embroideryType"]').value;
+            let firstEmbroideryPlacement = document.getElementById("firstEmbroideryPlacement").value;
 
-            if (!selectedColor || !selectedSize) {
+            let hasSecondEmbroidery = document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true';
+            let secondEmbroideryFile = document.querySelector('input[name="secondEmbroideryFile"]').files.length > 0;
+            let secondEmbroideryType = document.querySelector('select[name="secondEmbroideryType"]').value;
+            let secondEmbroideryPlacement = document.getElementById("secondEmbroideryPlacement").value;
+
+            if (!selectedColor || !selectedSize || !firstEmbroideryFile || !embroideryType || !firstEmbroideryPlacement) {
                 event.preventDefault();
-                alert("Por favor, selecciona una talla y un color antes de continuar.");
+                alert("Por favor, completa todos los campos requeridos antes de continuar.");
+            }
+
+            if (hasSecondEmbroidery && (!secondEmbroideryFile || !secondEmbroideryType || !secondEmbroideryPlacement)) {
+                event.preventDefault();
+                alert("Por favor, completa todos los campos del segundo bordado antes de continuar.");
             }
         }
+    
     </script>
-
     <div th:insert="~{user/templateUser.html::script}"></div>
 </body>
 
