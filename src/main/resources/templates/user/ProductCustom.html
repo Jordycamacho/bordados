@@ -82,8 +82,8 @@
                         <label>¿Qué tamaño de bordado quieres?*</label>
                         <select name="embroideryType" class="form-select" required>
                             <option value="Pequeño">Pequeño(10*10 cm)</option>
-                            <option value="Mediano">Mediano(15*15 cm) + 3 EUR</option>
-                            <option value="Grande">Grande(20*20 cm) + 7 EUR</option>
+                            <option value="Mediano">Mediano(15*15 cm) + [[${pricing.mediumSizeFirstEmbroideryPrice}]] EUR</option>
+                            <option value="Grande">Grande(20*20 cm) + [[${pricing.largeSizeFirstEmbroideryPrice}]] EUR</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -107,7 +107,7 @@
                     </div>
                     <!-- Segundo bordado (opcional) -->
                     <div class="form-group">
-                        <label>¿Quieres un segundo bordado en tu prenda? + 10 EUR</label>
+                        <label>¿Quieres un segundo bordado en tu prenda? + [[${pricing.secondDesignPrice}]] EUR</label>
                         <div class="radio-options">
                             <label><input type="radio" name="hasSecondEmbroidery" value="true"
                                     onclick="toggleSection('second-embroidery-section', true)"> Sí</label>
@@ -124,8 +124,8 @@
                             <label>¿Qué tamaño de bordado quieres?*</label>
                             <select name="secondEmbroideryType" class="form-select" required>
                                 <option value="Pequeño">Pequeño(10*10 cm)</option>
-                                <option value="Mediano">Mediano(15*15 cm) + 3 EUR</option>
-                                <option value="Grande">Grande(20*20 cm) + 7 EUR</option>
+                                <option value="Mediano">Mediano(15*15 cm) + [[${pricing.mediumSizeSecondEmbroideryPrice}]] EUR</option>
+                                <option value="Grande">Grande(20*20 cm) + [[${pricing.largeSizeSecondEmbroideryPrice}]] EUR</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -155,7 +155,7 @@
                     </div>
                     <!-- Bordado en manga (opcional) -->
                     <div class="form-group">
-                        <label>¿Quieres bordar una manga? + 3 EUR</label>
+                        <label>¿Quieres bordar una manga? + [[${pricing.sleevePrice}]] EUR</label>
                         <div class="radio-options">
                             <label><input type="radio" name="hasSleeveEmbroidery" value="true"
                                     onclick="toggleSection('sleeve-embroidery-section', true)"> Sí</label>
