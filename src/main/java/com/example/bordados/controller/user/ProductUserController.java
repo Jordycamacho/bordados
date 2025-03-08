@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.DTOs.CustomizedProductDTO;
+import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.service.CategoryService;
 import com.example.bordados.service.CustomizedProductDetailsService;
 import com.example.bordados.service.ProductService;
+import com.example.bordados.service.ServiceImpl.PricingServiceImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -40,6 +42,9 @@ public class ProductUserController {
     @Autowired
     private CustomizedProductDetailsService customizationService;
 
+    @Autowired
+    private PricingServiceImpl pricingService;
+    
     @ModelAttribute("categoriesWithSub")
     public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
         return categoryService.getAllCategoriesWithSubCategories();
@@ -61,8 +66,9 @@ public class ProductUserController {
     @GetMapping("/personalizar/{id}")
     public String viewProductCustom(@PathVariable Long id, Model model) {
         Product product = productService.getProductById(id);
-
+        PricingConfiguration pricing = pricingService.getPricingConfiguration();
         model.addAttribute("product", product);
+        model.addAttribute("pricing", pricing);
         return "user/productCustom";
     }
 

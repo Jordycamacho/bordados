@@ -19,12 +19,14 @@ import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.DTOs.CustomizedOrderDetailDto;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
+import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.service.CartService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.OrderServiceImpl;
+import com.example.bordados.service.ServiceImpl.PricingServiceImpl;
 import com.example.bordados.service.ServiceImpl.StripeService;
 
 @Controller
@@ -42,10 +44,12 @@ public class OrderController {
     private final OrderServiceImpl orderService;
     private final ProductService productService;
     private final StripeService stripeService;
+    private final PricingServiceImpl pricingService;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
-            ProductService productService, StripeService stripeService) {
+            ProductService productService, StripeService stripeService, PricingServiceImpl pricingService) {
         this.productService = productService;
+        this.pricingService = pricingService;
         this.stripeService = stripeService;
         this.cartService = cartService;
         this.userService = userService;
@@ -127,13 +131,60 @@ public class OrderController {
         Product product = productService.getProductById(customOrderDetail.getProductId());
         customOrderDetail.setProduct(product);
 
+        // Obtener la configuración de precios
+        PricingConfiguration pricing = pricingService.getPricingConfiguration();
+
+        // Calcular el costo adicional
+        double additionalCost = calculateAdditionalCost(customOrderDetail, pricing);
+        customOrderDetail.setAdditionalCost(additionalCost);
+
         // Crear la orden personalizada
         OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
         redirectAttributes.addFlashAttribute("success",
                 "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
         return "redirect:/bordados";
     }
-
+    private double calculateAdditionalCost(CustomizedOrderDetailDto dto, PricingConfiguration pricing) {
+        double additionalCost = 0.0;
+    
+        // Costo por tamaño del primer bordado
+        switch (dto.getEmbroideryType()) {
+            case "Mediano":
+                additionalCost += pricing.getMediumSizeFirstEmbroideryPrice();
+                break;
+            case "Grande":
+                additionalCost += pricing.getLargeSizeFirstEmbroideryPrice();
+                break;
+            default:
+                // Pequeño no tiene costo adicional
+                break;
+        }
+    
+        // Costo por segundo bordado (si aplica)
+        if (dto.isHasSecondEmbroidery()) {
+            additionalCost += pricing.getSecondDesignPrice();
+    
+            // Costo por tamaño del segundo bordado
+            switch (dto.getSecondEmbroideryType()) {
+                case "Mediano":
+                    additionalCost += pricing.getMediumSizeSecondEmbroideryPrice();
+                    break;
+                case "Grande":
+                    additionalCost += pricing.getLargeSizeSecondEmbroideryPrice();
+                    break;
+                default:
+                    // Pequeño no tiene costo adicional
+                    break;
+            }
+        }
+    
+        // Costo por bordado en manga (si aplica)
+        if (dto.isHasSleeveEmbroidery()) {
+            additionalCost += pricing.getSleevePrice();
+        }
+    
+        return additionalCost;
+    }
     @GetMapping("/tracking")
     public String viewOrderTracking() {
         return "user/userOrderTracking";

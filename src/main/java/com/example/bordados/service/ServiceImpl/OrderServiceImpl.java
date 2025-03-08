@@ -15,6 +15,7 @@ import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.OrderDetail;
+import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.model.Enums.ShippingStatus;
@@ -44,6 +45,8 @@ public class OrderServiceImpl {
     private final OrderCustomRepository orderCustomRepository;
     private final ProductRepository productRepository;
     private final StripeService stripeService;
+    private final PricingServiceImpl pricingService;
+
 
     public Order createOrder(Long userId, String paymentIntentId) {
         User user = userRepository.findById(userId)
@@ -113,7 +116,7 @@ public class OrderServiceImpl {
 
         return total.multiply(BigDecimal.valueOf(100)).longValue();
     }
-    
+
     private void createOrderDetails(Order order, List<Cart> cartItems) {
         for (Cart cart : cartItems) {
             OrderDetail orderDetail = new OrderDetail();
@@ -132,6 +135,9 @@ public class OrderServiceImpl {
     public OrderCustom createOrderCustom(CustomizedOrderDetailDto dto) {
         User user = userService.getCurrentUser();
 
+        // Obtener la configuración de precios
+        PricingConfiguration pricing = pricingService.getPricingConfiguration();
+
         // Crear la orden personalizada
         OrderCustom orderCustom = new OrderCustom();
         orderCustom.setUser(user);
@@ -139,8 +145,11 @@ public class OrderServiceImpl {
         orderCustom.setShippingStatus(ShippingStatus.PENDING);
         orderCustom.setTrackingNumber(UUID.randomUUID().toString());
 
+        // Calcular el costo adicional
+        double additionalCost = calculateAdditionalCost(dto, pricing);
+
         // Calcular el total
-        double total = dto.getProduct().getPrice() * dto.getQuantity() + dto.getAdditionalCost();
+        double total = (dto.getProduct().getPrice() + additionalCost) * dto.getQuantity();
         orderCustom.setTotal(total);
 
         // Crear el detalle de la orden personalizada
@@ -172,19 +181,57 @@ public class OrderServiceImpl {
             detail.setSleeveThreadColor(dto.getSleeveThreadColor());
         }
 
-        // Calcular el costo adicional
-        double additionalCost = detail.calculateAdditionalCost();
+        // Asignar el costo adicional
         detail.setAdditionalCost(additionalCost);
 
         // Relacionar el detalle con la orden
         orderCustom.addCustomizedOrderDetail(detail);
 
-        // Guardar la orden personalizada (esto también guardará el detalle debido a
-        // CascadeType.ALL)
+        // Guardar la orden personalizada
         orderCustom = orderCustomRepository.save(orderCustom);
 
         return orderCustom;
     }
 
+    private double calculateAdditionalCost(CustomizedOrderDetailDto dto, PricingConfiguration pricing) {
+        double additionalCost = 0.0;
 
+        // Costo por tamaño del primer bordado
+        switch (dto.getEmbroideryType()) {
+            case "Mediano":
+                additionalCost += pricing.getMediumSizeFirstEmbroideryPrice();
+                break;
+            case "Grande":
+                additionalCost += pricing.getLargeSizeFirstEmbroideryPrice();
+                break;
+            default:
+                // Pequeño no tiene costo adicional
+                break;
+        }
+
+        // Costo por segundo bordado (si aplica)
+        if (dto.isHasSecondEmbroidery()) {
+            additionalCost += pricing.getSecondDesignPrice();
+
+            // Costo por tamaño del segundo bordado
+            switch (dto.getSecondEmbroideryType()) {
+                case "Mediano":
+                    additionalCost += pricing.getMediumSizeSecondEmbroideryPrice();
+                    break;
+                case "Grande":
+                    additionalCost += pricing.getLargeSizeSecondEmbroideryPrice();
+                    break;
+                default:
+                    // Pequeño no tiene costo adicional
+                    break;
+            }
+        }
+
+        // Costo por bordado en manga (si aplica)
+        if (dto.isHasSleeveEmbroidery()) {
+            additionalCost += pricing.getSleevePrice();
+        }
+
+        return additionalCost;
+    }
 }
