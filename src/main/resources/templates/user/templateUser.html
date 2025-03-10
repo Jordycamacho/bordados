@@ -14,11 +14,11 @@
     <nav class="navbar">
 
         <div class="logo">
-            <a th:href="@{/bordados}"><img src="./images/logo.jpg" alt="Logo"></a>
+            <a th:href="@{/bordados}"><img th:src="@{/images/logo.jpg}" alt="Logo"></a>
         </div>
 
         <div class="mobile-icons">
-            <a href="cart.html">
+            <a th:href="@{/bordados/carrito}">
                 <button style="--i:#00d9ff;--j:#ffffff;" class="button_like">
                     <span class="icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -31,7 +31,7 @@
                     <span class="title_like">Carrito</span>
                 </button>
             </a>
-            <a href="like.html">
+            <a th:href="@{/bordados/wishlist}">
                 <button style="--i:#00d9ff;--j:#ffffff;" class="button_like">
                     <span class="icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -42,6 +42,16 @@
                         </svg>
                     </span>
                     <span class="title_like">Favoritos</span>
+                </button>
+            </a>
+            <a th:href="@{/bordados/orden/usuario}">
+                <button style="--i:#00d9ff;--j:#ffffff;" class="button_like">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                        </svg>
+                    </span>
+                    <span class="title_like">Usuario</span>
                 </button>
             </a>
         </div>
@@ -97,6 +107,16 @@
                         </svg>
                     </span>
                     <span class="title_like">Favoritos</span>
+                </button>
+            </a>
+            <a th:href="@{/bordados/orden/usuario}">
+                <button style="--i:#00d9ff;--j:#ffffff;" class="button_like button_like_hidden">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                        </svg>
+                    </span>
+                    <span class="title_like">Usuario</span>
                 </button>
             </a>
             <a th:href="@{/bordados/login}">
@@ -116,7 +136,11 @@
     </nav>
     <section class="hero-section">
         <a href="#" class="hero-link">
-            <div class="hero-image">
+            <div class="hero-video">
+                <video autoplay muted loop id="hero-video" playsinline>
+                    <source th:src="@{/images/home_video.mp4}" type="video/mp4">
+                    Tu navegador no soporta videos HTML5.
+                </video>
                 <button class="button_home" data-text="Awesome">
                     <span class="actual-text">&nbsp;EXPLORA_NUESTRO_CONTENIDO&nbsp;</span>
                     <span aria-hidden="true" class="hover-text">&nbsp;EXPLORA_NUESTRO_CONTENIDO&nbsp;</span>
@@ -134,11 +158,11 @@
     <nav class="navbar">
 
         <div class="logo">
-            <a th:href="@{/bordados}"><img src="./images/logo.jpg" alt="Logo"></a>
+            <a th:href="@{/bordados}"><img th:src="@{/images/logo.jpg}" alt="Logo"></a>
         </div>
 
         <div class="mobile-icons">
-            <a href="cart.html">
+            <a th:href="@{/bordados/carrito}">
                 <button style="--i:#00d9ff;--j:#ffffff;" class="button_like">
                     <span class="icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -151,7 +175,7 @@
                     <span class="title_like">Carrito</span>
                 </button>
             </a>
-            <a href="like.html">
+            <a th:href="@{/bordados/wishlist}">
                 <button style="--i:#00d9ff;--j:#ffffff;" class="button_like">
                     <span class="icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -162,6 +186,16 @@
                         </svg>
                     </span>
                     <span class="title_like">Favoritos</span>
+                </button>
+            </a>
+            <a th:href="@{/bordados/orden/usuario}">
+                <button style="--i:#00d9ff;--j:#ffffff;" class="button_like">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                        </svg>
+                    </span>
+                    <span class="title_like">Usuario</span>
                 </button>
             </a>
         </div>
@@ -219,7 +253,17 @@
                     <span class="title_like">Favoritos</span>
                 </button>
             </a>
-            <a href="SingIn.html">
+            <a th:href="@{/bordados/orden/usuario}">
+                <button style="--i:#00d9ff;--j:#ffffff;" class="button_like button_like_hidden">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                        </svg>
+                    </span>
+                    <span class="title_like">Usuario</span>
+                </button>
+            </a>
+            <a href="@{/bordados/login}">
                 <button class="Btn_logIn">
 
                     <div class="sign"><svg viewBox="0 0 512 512">
@@ -235,15 +279,19 @@
         </ul>
     </nav>
 
-    <section class="hero-section">
-        <a href="#" class="hero-link">
-            <div class="hero-image">
+    <section class="customize-section"> 
+        <div class="customize-video">
+            <video autoplay muted loop id="customize-video" playsinline>
+                <source src="/images/home_video.mp4" type="video/mp4">
+                Tu navegador no soporta videos HTML5.
+            </video>
+            <div class="customize-content">
                 <button class="button_home" data-text="Awesome">
                     <span class="actual-text">&nbsp;EXPLORA_NUESTRO_CONTENIDO&nbsp;</span>
                     <span aria-hidden="true" class="hover-text">&nbsp;EXPLORA_NUESTRO_CONTENIDO&nbsp;</span>
                 </button>
             </div>
-        </a>
+        </div>
     </section>
 </header>
 
@@ -252,7 +300,7 @@
     <!-- Logo y Redes Sociales -->
     <div class="footer-section">
         <div class="footer-logo">
-            <img src="images/logo.jpg" alt="Logo de la marca">
+            <img th:src="@{/images/logo.jpg}" alt="Logo de la marca">
         </div>
 
         <ul class="wrapper">
