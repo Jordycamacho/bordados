@@ -1,5 +1,7 @@
 package com.example.bordados.controller.admin;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -8,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.bordados.DTOs.CategoryDTO;
+import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +32,11 @@ public class CategoryController {
 
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
+    }
+
+    @ModelAttribute("categoriesWithSub")
+    public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
+        return categoryService.getAllCategoriesWithSubCategories();
     }
 
     @GetMapping

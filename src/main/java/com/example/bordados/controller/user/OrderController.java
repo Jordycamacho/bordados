@@ -1,11 +1,13 @@
 package com.example.bordados.controller.user;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +24,8 @@ import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
+import com.example.bordados.repository.OrderCustomRepository;
+import com.example.bordados.repository.OrderRepository;
 import com.example.bordados.service.CartService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
@@ -45,10 +49,15 @@ public class OrderController {
     private final ProductService productService;
     private final StripeService stripeService;
     private final PricingServiceImpl pricingService;
+    private final OrderRepository orderRepository;
+    private final OrderCustomRepository orderCustomRepository;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
-            ProductService productService, StripeService stripeService, PricingServiceImpl pricingService) {
+            ProductService productService, StripeService stripeService, PricingServiceImpl pricingService,
+            OrderRepository orderRepository, OrderCustomRepository orderCustomRepository) {
         this.productService = productService;
+        this.orderRepository = orderRepository;
+        this.orderCustomRepository = orderCustomRepository;
         this.pricingService = pricingService;
         this.stripeService = stripeService;
         this.cartService = cartService;
@@ -144,9 +153,10 @@ public class OrderController {
                 "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
         return "redirect:/bordados";
     }
+
     private double calculateAdditionalCost(CustomizedOrderDetailDto dto, PricingConfiguration pricing) {
         double additionalCost = 0.0;
-    
+
         // Costo por tamaño del primer bordado
         switch (dto.getEmbroideryType()) {
             case "Mediano":
@@ -159,11 +169,11 @@ public class OrderController {
                 // Pequeño no tiene costo adicional
                 break;
         }
-    
+
         // Costo por segundo bordado (si aplica)
         if (dto.isHasSecondEmbroidery()) {
             additionalCost += pricing.getSecondDesignPrice();
-    
+
             // Costo por tamaño del segundo bordado
             switch (dto.getSecondEmbroideryType()) {
                 case "Mediano":
@@ -177,16 +187,36 @@ public class OrderController {
                     break;
             }
         }
-    
+
         // Costo por bordado en manga (si aplica)
         if (dto.isHasSleeveEmbroidery()) {
             additionalCost += pricing.getSleevePrice();
         }
-    
+
         return additionalCost;
     }
+
     @GetMapping("/tracking")
     public String viewOrderTracking() {
         return "user/userOrderTracking";
     }
+
+    @GetMapping("/usuario")
+    public String viewOrdersUser(Model model, Principal principal) {
+        // Obtener el usuario actual usando el servicio
+        User user = userService.findUserByEmail(principal.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+        // Obtener las órdenes normales y personalizadas del usuario
+        List<Order> orders = orderRepository.findByUser(user);
+        List<OrderCustom> customOrders = orderCustomRepository.findByUser(user);
+
+        // Pasar los datos a la vista
+        model.addAttribute("user", user);
+        model.addAttribute("orders", orders);
+        model.addAttribute("customOrders", customOrders);
+
+        return "user/userOrders";
+    }
+
 }

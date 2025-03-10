@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.DTOs.ProductDTO;
 import com.example.bordados.model.Product;
 import com.example.bordados.service.ServiceImpl.CategoryServiceImpl;
@@ -41,6 +42,11 @@ public class ProductController {
         this.productService = productService;
         this.categoryService = categoryService;
         this.subCategoryService = subCategoryService;
+    }
+
+    @ModelAttribute("categoriesWithSub")
+    public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
+        return categoryService.getAllCategoriesWithSubCategories();
     }
 
     @GetMapping

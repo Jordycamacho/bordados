@@ -1,5 +1,8 @@
 package com.example.bordados.controller.admin;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -9,8 +12,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.DTOs.SubCategoryDTO;
 import com.example.bordados.repository.CategoryRepository;
+import com.example.bordados.service.CategoryService;
 import com.example.bordados.service.SubCategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +33,13 @@ public class SubCategoryController {
 
     private final SubCategoryService subCategoryService;
     private final CategoryRepository categoryRepository;
+    @Autowired
+    private CategoryService categoryService;
 
+    @ModelAttribute("categoriesWithSub")
+    public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
+        return categoryService.getAllCategoriesWithSubCategories();
+    }
     @GetMapping
     @Operation(summary = "Mostrar todas las subcategorías")
     public String showAllSubCategories(Model model) {

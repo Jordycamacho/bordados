@@ -2,12 +2,14 @@ package com.example.bordados.controller.admin;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
@@ -17,9 +19,11 @@ import com.example.bordados.repository.CustomizedOrderDetailRepository;
 import com.example.bordados.repository.OrderCustomRepository;
 import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
+import com.example.bordados.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -32,6 +36,8 @@ public class AdminOrderController {
     private final OrderCustomRepository orderCustomRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final CustomizedOrderDetailRepository customizedOrderDetailRepository;
+    @Autowired
+private CategoryService categoryService;
 
     public AdminOrderController(OrderRepository orderRepository, OrderCustomRepository orderCustomRepository,
             OrderDetailRepository orderDetailRepository, CustomizedOrderDetailRepository customizedOrderDetailRepository) {
@@ -41,6 +47,11 @@ public class AdminOrderController {
         this.orderCustomRepository = orderCustomRepository;
     }
 
+
+    @ModelAttribute("categoriesWithSub")
+    public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
+        return categoryService.getAllCategoriesWithSubCategories();
+    }
     @GetMapping("")
     public String showOrders(Model model) {
         // Obtener todas las órdenes normales y personalizadas
