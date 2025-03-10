@@ -144,4 +144,19 @@ public class UserController {
     public String getviewGuide() {
         return "user/SizeGuide";
     }
+
+    @GetMapping("/politica-privacidad")
+    public String getviewPrivacyPolicy() {
+        return "user/privacyPolicy";
+    }
+
+    @GetMapping("/politica-envios-rembolsos")
+    public String getMethodName() {
+        return "user/refundPolicy";
+    }
+    
+    @GetMapping("/terminos-servicio")
+    public String getviewTermsOfService() {
+        return "user/termsService";
+    }
 }
