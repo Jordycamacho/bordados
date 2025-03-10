@@ -140,11 +140,6 @@ public class UserController {
         return "user/affiliate";
     }
 
-    @GetMapping("/guia")
-    public String getviewGuide() {
-        return "user/SizeGuide";
-    }
-
     @GetMapping("/politica-privacidad")
     public String getviewPrivacyPolicy() {
         return "user/privacyPolicy";
