@@ -258,7 +258,7 @@ public class OrderController {
         model.addAttribute("order", order);
         model.addAttribute("orderDetails", orderDetails);
 
-        return "/admin/order/orderDetail";
+        return "/user/orderDetail";
     }
 
     @GetMapping("/detalle/custom/{id}")
@@ -274,6 +274,6 @@ public class OrderController {
         model.addAttribute("orderCustom", orderCustom);
         model.addAttribute("customizedOrderDetails", customizedOrderDetails);
 
-        return "/admin/order/customOrderDetail";
+        return "/user/customOrderDetail";
     }
 }
