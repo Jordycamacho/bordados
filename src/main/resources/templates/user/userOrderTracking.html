@@ -60,12 +60,14 @@
             border-radius: 5px;
             font-size: var(--font-size-medium);
             transition: background-color var(--transition-speed);
+            text-decoration: none;
+            display: inline-block;
         }
         
         .track-button:hover {
             background-color: #008cba;
         }
-        </style>
+    </style>
 </head>
 
 <body>
@@ -84,7 +86,8 @@
                     <label for="billing-email">Correo de facturación</label>
                     <input type="email" id="billing-email" placeholder="Correo utilizado en el pago">
                 </div>
-                <button class="track-button">Rastrear</button>
+                <!--https://www.correos.es/es/es/herramientas/localizador/envios-->
+                <a href="https://www.correos.es/es/es/herramientas/localizador/envios" class="track-button">Rastrear</a>
             </div>
         </section>
     </main>
