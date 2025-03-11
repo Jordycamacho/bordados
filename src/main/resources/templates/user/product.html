@@ -14,20 +14,17 @@
     <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
 
     <main>
-
         <section class="product-display">
-            <!-- Foto Principal del Producto -->
             <div class="product-image">
                 <img th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
             </div>
-
 
             <div class="product-form">
                 <h1 th:text="${product.name}"></h1>
                 <p class="product-description" th:text="${product.description}"></p>
                 <p class="product-price" th:text="${product.price} + '0 $'"></p>
 
-                <form th:if="${product.quantity > 0}" th:action="@{/bordados/carrito/agregar}" method="post">
+                <form th:if="${product.quantity > 0}" th:action="@{/bordados/carrito/agregar}" method="post" onsubmit="return validateForm()">
                     <input type="hidden" name="productId" th:value="${product.id}">
                 
                     <!-- Cantidad -->
@@ -36,7 +33,7 @@
                         <div class="quantity-selector">
                             <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">-</button>
                             <input type="number" name="quantity" id="quantity" th:max="${product.quantity}" value="1"
-                                min="1" class="quantity-input">
+                                min="1" class="quantity-input" required>
                             <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
                         </div>
                     </div>
@@ -80,7 +77,6 @@
                         </div>
                     </button>
                 </form>
-                
             </div>
         </section>
 
@@ -247,7 +243,6 @@
             event.preventDefault();
             document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
-            let selectedColor = event.target.getAttribute("data-color");
             document.getElementById('selectedColor').value = event.target.dataset.color;
         }
 
@@ -255,20 +250,20 @@
             event.preventDefault(); 
             document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
-            let selectedSize = event.target.getAttribute("data-size");
             document.getElementById('selectedSize').value = event.target.dataset.size;
         }
 
+        function validateForm() {
+            let selectedColor = document.getElementById("selectedColor").value;
+            let selectedSize = document.getElementById("selectedSize").value;
 
-        function validateForm(event) {
-        let selectedColor = document.getElementById("selectedColor").value;
-        let selectedSize = document.getElementById("selectedSize").value;
+            if (!selectedColor || !selectedSize) {
+                alert("Por favor, completa todos los campos obligatorios antes de continuar.");
+                return false; // Evita que el formulario se envíe
+            }
 
-        if (!selectedColor || !selectedSize) {
-            event.preventDefault();
-            alert("Por favor, selecciona una talla y un color antes de continuar.");
+            return true; // Permite que el formulario se envíe
         }
-    }
     </script>
     <div th:insert="~{user/templateUser.html::script}"></div>
 </body>
