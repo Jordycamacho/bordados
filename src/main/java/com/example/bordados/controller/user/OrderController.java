@@ -12,19 +12,25 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.DTOs.CustomizedOrderDetailDto;
+import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
+import com.example.bordados.model.OrderDetail;
 import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
+import com.example.bordados.repository.CustomizedOrderDetailRepository;
 import com.example.bordados.repository.OrderCustomRepository;
+import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
 import com.example.bordados.service.CartService;
 import com.example.bordados.service.IUserService;
@@ -51,12 +57,17 @@ public class OrderController {
     private final PricingServiceImpl pricingService;
     private final OrderRepository orderRepository;
     private final OrderCustomRepository orderCustomRepository;
+    private final OrderDetailRepository orderDetailRepository;
+    private final CustomizedOrderDetailRepository customizedOrderDetailRepository;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
             ProductService productService, StripeService stripeService, PricingServiceImpl pricingService,
-            OrderRepository orderRepository, OrderCustomRepository orderCustomRepository) {
+            OrderRepository orderRepository, OrderCustomRepository orderCustomRepository, OrderDetailRepository orderDetailRepository
+            , CustomizedOrderDetailRepository customizedOrderDetailRepository) {
         this.productService = productService;
+        this.customizedOrderDetailRepository = customizedOrderDetailRepository;
         this.orderRepository = orderRepository;
+        this.orderDetailRepository = orderDetailRepository;
         this.orderCustomRepository = orderCustomRepository;
         this.pricingService = pricingService;
         this.stripeService = stripeService;
@@ -219,4 +230,50 @@ public class OrderController {
         return "user/userOrders";
     }
 
+    @PostMapping("/usuario/actualizar")
+    public String updateUserAddress(@RequestParam String address, Principal principal,
+            RedirectAttributes redirectAttributes) {
+        // Obtener el usuario actual
+        User user = userService.findUserByEmail(principal.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+        // Actualizar la dirección
+        user.setAddress(address);
+        userService.save(user);
+
+        // Redirigir con un mensaje de éxito
+        redirectAttributes.addFlashAttribute("success", "Dirección actualizada correctamente.");
+        return "redirect:/bordados/orden/usuario";
+    }
+
+    @GetMapping("/detalle/normal/{id}")
+    public String showNormalOrderDetails(@PathVariable Long id, Model model) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
+
+        // Obtener los detalles de la orden (OrderDetail)
+        List<OrderDetail> orderDetails = orderDetailRepository.findByOrder(order);
+
+        // Pasar los datos a la vista
+        model.addAttribute("order", order);
+        model.addAttribute("orderDetails", orderDetails);
+
+        return "/admin/order/orderDetail";
+    }
+
+    @GetMapping("/detalle/custom/{id}")
+    public String showCustomOrderDetails(@PathVariable Long id, Model model) {
+        OrderCustom orderCustom = orderCustomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden personalizada no encontrada"));
+
+        // Obtener los detalles de la orden personalizada (CustomizedOrderDetail)
+        List<CustomizedOrderDetail> customizedOrderDetails = customizedOrderDetailRepository
+                .findByOrderCustom(orderCustom);
+
+        // Pasar los datos a la vista
+        model.addAttribute("orderCustom", orderCustom);
+        model.addAttribute("customizedOrderDetails", customizedOrderDetails);
+
+        return "/admin/order/customOrderDetail";
+    }
 }

@@ -100,4 +100,13 @@ public class UserServiceImpl implements IUserService {
     public Optional<User> findUserByEmail(String email) {
         return userRepository.findUserByEmail(email);
     }
+
+    public void save(User user) {
+        User existingUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        existingUser.setAddress(user.getAddress());
+
+        userRepository.save(existingUser);
+    }
 }

@@ -13,17 +13,7 @@ public interface IUserService {
     User getCurrentUser();
 
     Optional<User> findUserByEmail(String email);
-    /**List<User> findAll();
-
-    User save(User user);
-
-    User update(User user);
-   
-    void deleteById(Long idUser);
     
-    Optional<User> findUserById(Long idUser);
-   
-    
+    void save(User user);
 
-    */
 }
