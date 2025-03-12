@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+
 <body>
 
     <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
@@ -26,11 +28,16 @@
                     <td th:text="${order.createdDate}"></td>
                     <td th:text="${order.total}"></td>
                     <td>
-                        <a th:href="@{/admin/ordenes/detalle/normal/{id}(id=${order.id})}" class="btn btn-info btn-sm">Ver Detalle</a>
-                        <form th:action="@{/admin/ordenes/complete/{id}(id=${order.id})}" method="post" style="display: inline;">
+                        <a th:href="@{/admin/ordenes/detalle/normal/{id}(id=${order.id})}"
+                            class="btn btn-info btn-sm">Ver Detalle</a>
+                        <form th:action="@{/admin/ordenes/complete/{id}(id=${order.id})}" method="post"
+                            style="display: inline;">
                             <input type="hidden" name="type" value="normal">
-                            <button type="submit" class="btn btn-success btn-sm">Marcar como Completada</button>
+                            <button type="button" class="btn btn-success btn-sm"
+                                th:onclick="'openTrackingModal(' + ${order.id} + ', \'normal\')'">Marcar como
+                                Completada</button>
                         </form>
+
                     </td>
                 </tr>
             </tbody>
@@ -53,17 +60,110 @@
                     <td th:text="${customOrder.createdDate}"></td>
                     <td th:text="${customOrder.total}"></td>
                     <td>
-                        <a th:href="@{/admin/ordenes/detalle/custom/{id}(id=${customOrder.id})}" class="btn btn-info btn-sm">Ver Detalle</a>
-                        <form th:action="@{/admin/ordenes/complete/{id}(id=${customOrder.id})}" method="post" style="display: inline;">
+                        <a th:href="@{/admin/ordenes/detalle/custom/{id}(id=${customOrder.id})}"
+                            class="btn btn-info btn-sm">Ver Detalle</a>
+                        <form th:action="@{/admin/ordenes/complete/{id}(id=${customOrder.id})}" method="post"
+                            style="display: inline;">
                             <input type="hidden" name="type" value="custom">
-                            <button type="submit" class="btn btn-success btn-sm">Marcar como Completada</button>
+                            <button type="button" class="btn btn-success btn-sm"
+                                th:onclick="'openTrackingModal(' + ${customOrder.id} + ', \'custom\')'">
+                                Marcar como Completada
+                            </button>
                         </form>
                     </td>
                 </tr>
             </tbody>
         </table>
+
+        <!-- Órdenes Normales Completadas -->
+        <h3>Órdenes Normales Completadas</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>No. de Orden</th>
+                    <th>Fecha</th>
+                    <th>Valor</th>
+                    <th>Código de Seguimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${completedOrders}">
+                    <td th:text="${order.trackingNumber}"></td>
+                    <td th:text="${order.createdDate}"></td>
+                    <td th:text="${order.total}"></td>
+                    <td th:text="${order.trackingNumber}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Órdenes Personalizadas Completadas -->
+        <h3>Órdenes Personalizadas Completadas</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>No. de Orden</th>
+                    <th>Fecha</th>
+                    <th>Valor</th>
+                    <th>Código de Seguimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="customOrder : ${completedCustomOrders}">
+                    <td th:text="${customOrder.trackingNumber}"></td>
+                    <td th:text="${customOrder.createdDate}"></td>
+                    <td th:text="${customOrder.total}"></td>
+                    <td th:text="${customOrder.trackingNumber}"></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
+    <!-- Modal para ingresar el código de seguimiento -->
+    <div class="modal fade" id="trackingModal" tabindex="-1" aria-labelledby="trackingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="trackingModalLabel">Marcar como Completada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="trackingForm" method="post">
+                        <div class="mb-3">
+                            <label for="trackingCode" class="form-label">Código de Seguimiento de Correos</label>
+                            <input type="text" class="form-control" id="trackingCode" name="trackingCode" required>
+                        </div>
+                        <input type="hidden" id="orderId" name="id">
+                        <input type="hidden" id="orderType" name="type">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="submitTrackingForm()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTrackingModal(orderId, orderType) {
+            document.getElementById('orderId').value = orderId;
+            document.getElementById('orderType').value = orderType;
+            new bootstrap.Modal(document.getElementById('trackingModal')).show();
+        }
+
+        function submitTrackingForm() {
+            const form = document.getElementById('trackingForm');
+            const orderId = document.getElementById('orderId').value;
+            const orderType = document.getElementById('orderType').value;
+
+            // Actualizar la acción del formulario con el ID correcto
+            form.action = `/admin/ordenes/complete/${orderId}`;
+
+            // Enviar el formulario
+            form.submit();
+        }
+    </script>
     <div th:replace="~{admin/category/templateAdmin.html::script}"></div>
 </body>
+
 </html>
