@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Bienvenida</title>
+    <title>Pedido Enviado</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,14 +32,13 @@
             color: #555555;
             line-height: 1.6;
         }
-        .discount-code {
+        .order-details {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
-            text-align: center;
             margin: 20px 0;
         }
-        .discount-code h2 {
+        .order-details h2 {
             color: #28a745;
             margin: 0;
         }
@@ -54,19 +53,20 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>¡Bienvenido a Gast Shop, <span th:text="${name}"></span>!</h1>
+            <h1>¡Tu pedido ha sido enviado!</h1>
         </div>
         <div class="content">
-            <p>Gracias por registrarte en nuestra plataforma. Estamos emocionados de tenerte con nosotros.</p>
-            <p>Como regalo de bienvenida, aquí tienes un código de descuento del <strong>10%</strong> para tu primera compra:</p>
-            <div class="discount-code">
-                <h2 th:text="${discountCode}"></h2>
+            <p>Gracias por confiar en nosotros. Tu pedido ha sido enviado con éxito y está en camino.</p>
+            <div class="order-details">
+                <h2>Detalles del Pedido</h2>
+                <p><strong>Código de Seguimiento:</strong> <span th:text="${trackingCode}"></span></p>
+                <p><strong>Número de Pedido:</strong> <span th:text="${orderId}"></span></p>
+                <p><strong>Tipo de Pedido:</strong> <span th:text="${orderType == 'normal' ? 'Normal' : 'Personalizado'}"></span></p>
             </div>
-            <p>Simplemente ingresa este código al finalizar tu compra para aplicar el descuento.</p>
-            <p>¡Esperamos que disfrutes de nuestros productos!</p>
+            <p>Puedes rastrear tu pedido utilizando el código de seguimiento proporcionado.</p>
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
         </div>
         <div class="footer">
-            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
             <p>Equipo de Gast Shop</p>
         </div>
     </div>

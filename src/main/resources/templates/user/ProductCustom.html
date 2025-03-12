@@ -23,6 +23,41 @@
         .preview-button:hover {
             background-color: #0056b3;
         }
+
+        .payment-section {
+            flex: 1 1 40%;
+            padding: 10px;
+            border-left: 1px solid #ddd;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .checkout-btn:hover {
+            background: #333;
+        }
+
+        /* En móvil, se apilan las columnas */
+        @media (max-width: 768px) {
+            .order-summary {
+                flex-direction: column;
+            }
+
+            .payment-section {
+                border-left: none;
+                border-top: 1px solid #ddd;
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 
@@ -209,8 +244,17 @@
                             ¿Quieres ver cómo quedaría tu bordado?
                         </a>
                     </div>
-                    <!-- Botón para enviar -->
-                    <button type="submit">Comprar</button>
+                    <!-- Botón para enviar    <button type="submit">Comprar</button>-->
+                    
+                    <div class="payment-section">
+                        <h2>Pago con Tarjeta</h2>
+                        <form id="payment-form">
+                            <div id="card-element"></div>
+                            <div id="card-errors" role="alert"></div>
+                            <button id="submit" class="checkout-btn">Pagar</button>
+                            <div id="payment-message" class="hidden"></div>
+                        </form>
+                    </div>
                 </form>
             </div>
         </section>

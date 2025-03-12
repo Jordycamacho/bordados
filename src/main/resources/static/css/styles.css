@@ -11,7 +11,7 @@
 
 /*General*/
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Merriweather", serif; 
     margin: 0;
     padding: 0;
     background-color: #ffffff;
@@ -1902,7 +1902,7 @@ body {
         left: -70%; /* Menú desplegable desde la izquierda */
         height: 100%;
         width: 70%;
-        background-color: var(--primary-color);
+        background-color: #000;
         padding-top: 60px;
         transition: left var(--transition-speed);
         z-index: 1000;
@@ -1914,21 +1914,31 @@ body {
     }
 
     .nav-links li {
-        margin: 10px 0;
+        border-bottom: 1px solid #444; 
+        margin: 5px;             /* Ajusta si quieres más margen vertical */
     }
 
-    .nav-links .dropdown-menu {
-        position: static;
-        background-color: rgba(0, 0, 0, 0.2);
-        box-shadow: none;
-        border-radius: 0;
+    .nav-links li a {
+        display: block;
+        padding: 15px 20px; /* Ajusta según tu gusto */
+        color: #fff !important;
+        text-decoration: none;
+        font-size: 1rem;
     }
 
+    .nav-links .dropdown-menu,
     .nav-links .dropdown-submenu {
-        position: static;
-        background-color: rgba(0, 0, 0, 0.3);
+        position: static;    /* Para que aparezcan en la misma columna */
+        background-color: #000;
         box-shadow: none;
         border-radius: 0;
+        opacity: 1;
+        transform: none;
+    }
+
+    .nav-links .dropdown-menu a,
+    .nav-links .dropdown-submenu a {
+        color: #fff !important;
     }
 
     /* Botones ocultos en móviles */
