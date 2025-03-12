@@ -17,6 +17,7 @@ import org.thymeleaf.context.Context;
 import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.User;
+
 @Service
 public class EmailService {
 
@@ -51,7 +52,8 @@ public class EmailService {
         mailSender.send(mimeMessage);
     }
 
-    public void sendOrderConfirmationEmail(String email, String orderNumber, User user, List<CartDTO> cartItems, double total) throws MessagingException {
+    public void sendOrderConfirmationEmail(String email, String orderNumber, User user, List<CartDTO> cartItems,
+            double total) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
@@ -69,8 +71,9 @@ public class EmailService {
 
         mailSender.send(mimeMessage);
     }
-    
-    public void sendCustomOrderConfirmationEmail(String email, String orderNumber, User user, CustomizedOrderDetail detail, double total) throws MessagingException {
+
+    public void sendCustomOrderConfirmationEmail(String email, String orderNumber, User user,
+            CustomizedOrderDetail detail, double total) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
@@ -111,14 +114,29 @@ public class EmailService {
     }
 
     public void sendOrderCompletedEmail(String userEmail, String trackingCode, Long orderId, String orderType) {
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(userEmail);
-        mailMessage.setSubject("Tu pedido ha sido enviado");
-        mailMessage.setText("¡Tu pedido ha sido enviado con éxito!\n\n" +
-                "Código de seguimiento: " + trackingCode + "\n" +
-                "Número de pedido: " + orderId + "\n" +
-                "Tipo de pedido: " + (orderType.equals("normal") ? "Normal" : "Personalizado") + "\n\n" +
-                "Gracias por confiar en nosotros.");
-        mailSender.send(mailMessage);
+        try {
+            // Crear el mensaje MimeMessage
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            // Configurar el correo
+            helper.setTo(userEmail);
+            helper.setSubject("Tu pedido ha sido enviado");
+
+            // Crear el contexto para la plantilla Thymeleaf
+            Context context = new Context();
+            context.setVariable("trackingCode", trackingCode);
+            context.setVariable("orderId", orderId);
+            context.setVariable("orderType", orderType);
+
+            // Procesar la plantilla HTML
+            String htmlContent = templateEngine.process("emails/orderCompletedEmail", context);
+            helper.setText(htmlContent, true); // true indica que el contenido es HTML
+
+            // Enviar el correo
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Error al enviar el correo electrónico", e);
+        }
     }
 }
