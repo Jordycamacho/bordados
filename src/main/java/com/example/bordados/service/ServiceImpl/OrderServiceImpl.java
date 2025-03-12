@@ -47,7 +47,6 @@ public class OrderServiceImpl {
     private final StripeService stripeService;
     private final PricingServiceImpl pricingService;
 
-
     public Order createOrder(Long userId, String paymentIntentId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario con ID " + userId + " no encontrado"));
@@ -135,6 +134,14 @@ public class OrderServiceImpl {
     public OrderCustom createOrderCustom(CustomizedOrderDetailDto dto) {
         User user = userService.getCurrentUser();
 
+        Product product = dto.getProduct();
+        int requestedQuantity = dto.getQuantity();
+        int availableQuantity = product.getQuantity();
+
+        if (availableQuantity < requestedQuantity) {
+            throw new IllegalStateException("No hay suficiente cantidad para el producto: " + product.getName() +
+                    ". Disponible: " + availableQuantity + ", solicitado: " + requestedQuantity);
+        }
         // Obtener la configuración de precios
         PricingConfiguration pricing = pricingService.getPricingConfiguration();
 
@@ -189,6 +196,9 @@ public class OrderServiceImpl {
 
         // Guardar la orden personalizada
         orderCustom = orderCustomRepository.save(orderCustom);
+
+        product.setQuantity(availableQuantity - requestedQuantity);
+        productRepository.save(product);
 
         return orderCustom;
     }

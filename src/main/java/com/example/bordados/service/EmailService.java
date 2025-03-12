@@ -109,4 +109,16 @@ public class EmailService {
 
         mailSender.send(mimeMessage);
     }
+
+    public void sendOrderCompletedEmail(String userEmail, String trackingCode, Long orderId, String orderType) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(userEmail);
+        mailMessage.setSubject("Tu pedido ha sido enviado");
+        mailMessage.setText("¡Tu pedido ha sido enviado con éxito!\n\n" +
+                "Código de seguimiento: " + trackingCode + "\n" +
+                "Número de pedido: " + orderId + "\n" +
+                "Tipo de pedido: " + (orderType.equals("normal") ? "Normal" : "Personalizado") + "\n\n" +
+                "Gracias por confiar en nosotros.");
+        mailSender.send(mailMessage);
+    }
 }

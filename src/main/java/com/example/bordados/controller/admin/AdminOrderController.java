@@ -20,6 +20,7 @@ import com.example.bordados.repository.OrderCustomRepository;
 import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
 import com.example.bordados.service.CategoryService;
+import com.example.bordados.service.EmailService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,47 +37,71 @@ public class AdminOrderController {
     private final OrderCustomRepository orderCustomRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final CustomizedOrderDetailRepository customizedOrderDetailRepository;
+    private final EmailService emailService;
     @Autowired
-private CategoryService categoryService;
+    private CategoryService categoryService;
 
     public AdminOrderController(OrderRepository orderRepository, OrderCustomRepository orderCustomRepository,
-            OrderDetailRepository orderDetailRepository, CustomizedOrderDetailRepository customizedOrderDetailRepository) {
+            OrderDetailRepository orderDetailRepository, EmailService emailService,
+            CustomizedOrderDetailRepository customizedOrderDetailRepository) {
         this.orderRepository = orderRepository;
         this.customizedOrderDetailRepository = customizedOrderDetailRepository;
         this.orderDetailRepository = orderDetailRepository;
         this.orderCustomRepository = orderCustomRepository;
+        this.emailService = emailService;
     }
-
 
     @ModelAttribute("categoriesWithSub")
     public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
         return categoryService.getAllCategoriesWithSubCategories();
     }
+
     @GetMapping("")
     public String showOrders(Model model) {
-        // Obtener todas las órdenes normales y personalizadas
-        List<Order> orders = orderRepository.findAll();
-        List<OrderCustom> customOrders = orderCustomRepository.findAll();
+        // Obtener órdenes normales
+        List<Order> pendingOrders = orderRepository.findByShippingStatusNot(ShippingStatus.DELIVERED);
+        List<Order> completedOrders = orderRepository.findByShippingStatus(ShippingStatus.DELIVERED);
+
+        // Obtener órdenes personalizadas
+        List<OrderCustom> pendingCustomOrders = orderCustomRepository.findByShippingStatusNot(ShippingStatus.DELIVERED);
+        List<OrderCustom> completedCustomOrders = orderCustomRepository.findByShippingStatus(ShippingStatus.DELIVERED);
 
         // Pasar las órdenes a la vista
-        model.addAttribute("orders", orders);
-        model.addAttribute("customOrders", customOrders);
+        model.addAttribute("orders", pendingOrders);
+        model.addAttribute("completedOrders", completedOrders);
+        model.addAttribute("customOrders", pendingCustomOrders);
+        model.addAttribute("completedCustomOrders", completedCustomOrders);
+
 
         return "/admin/order/showOrder";
     }
 
     @PostMapping("/complete/{id}")
-    public String markOrderAsCompleted(@PathVariable Long id, @RequestParam String type,
+    public String markOrderAsCompleted(
+        @PathVariable("id") Long id,
+        @RequestParam("type") String type,
+        @RequestParam("trackingCode") String trackingCode,
             RedirectAttributes redirectAttributes) {
+
         if (type.equals("normal")) {
             Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Orden no encontrada"));
             order.setShippingStatus(ShippingStatus.DELIVERED);
+            order.setTrackingNumber(trackingCode);
             orderRepository.save(order);
+
+            // Enviar correo al usuario
+            emailService.sendOrderCompletedEmail(order.getUser().getEmail(), order.getTrackingNumber(), order.getId(),
+                    "normal");
         } else if (type.equals("custom")) {
             OrderCustom orderCustom = orderCustomRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Orden personalizada no encontrada"));
             orderCustom.setShippingStatus(ShippingStatus.DELIVERED);
+            orderCustom.setTrackingNumber(trackingCode);
             orderCustomRepository.save(orderCustom);
+
+            // Enviar correo al usuario
+            emailService.sendOrderCompletedEmail(orderCustom.getUser().getEmail(), orderCustom.getTrackingNumber(),
+                    orderCustom.getId(), "custom");
         }
 
         redirectAttributes.addFlashAttribute("success", "Orden marcada como completada exitosamente.");
