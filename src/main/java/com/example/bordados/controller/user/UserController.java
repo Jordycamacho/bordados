@@ -140,17 +140,17 @@ public class UserController {
         return "user/affiliate";
     }
 
-    @GetMapping("/politica-privacidad")
+    @GetMapping("/politicaprivacidad")
     public String getviewPrivacyPolicy() {
         return "user/privacyPolicy";
     }
 
-    @GetMapping("/politica-envios-rembolsos")
+    @GetMapping("/politicaenviosrembolsos")
     public String getMethodName() {
         return "user/refundPolicy";
     }
     
-    @GetMapping("/terminos-servicio")
+    @GetMapping("/terminosservicio")
     public String getviewTermsOfService() {
         return "user/termsService";
     }
