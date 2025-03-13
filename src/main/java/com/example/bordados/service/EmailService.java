@@ -35,20 +35,20 @@ public class EmailService {
         mailSender.send(mailMessage);
     }
 
-    public void sendWelcomeEmail(String email, String name) throws MessagingException {
+    public void sendWelcomeEmail(String email, String name, String discountCode) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-
+    
         Context context = new Context();
         context.setVariable("name", name);
-        context.setVariable("discountCode", "WELCOME10");
-
+        context.setVariable("discountCode", discountCode);
+    
         String htmlContent = templateEngine.process("emails/welcome", context);
-
+    
         helper.setTo(email);
         helper.setSubject("¡Bienvenido a Bordados!");
         helper.setText(htmlContent, true); // true indica que es HTML
-
+    
         mailSender.send(mimeMessage);
     }
 

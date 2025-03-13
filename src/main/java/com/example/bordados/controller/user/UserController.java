@@ -18,7 +18,6 @@ import com.example.bordados.DTOs.CategorySubCategoryDTO;
 import com.example.bordados.DTOs.UserDTO;
 import com.example.bordados.model.Product;
 import com.example.bordados.service.CategoryService;
-import com.example.bordados.service.EmailService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
 
@@ -43,9 +42,6 @@ public class UserController {
 
     @Autowired
     private ProductService productService;
-
-    @Autowired
-    private EmailService emailService;
 
     @ModelAttribute("categoriesWithSub")
     public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
@@ -119,9 +115,6 @@ public class UserController {
             // Registrar al usuario
             userService.registerUser(userDTO);
             logger.info("Usuario registrado exitosamente: {}", userDTO.getEmail());
-
-            // Enviar correo de bienvenida
-            emailService.sendWelcomeEmail(userDTO.getEmail(), userDTO.getName());
 
             return "redirect:/bordados/login";
         } catch (IllegalArgumentException e) {

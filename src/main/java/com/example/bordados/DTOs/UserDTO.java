@@ -21,4 +21,6 @@ public class UserDTO {
     private String address;
 
     private String referrerCode;
+
+    private String referredAffiliateCode;
 }
