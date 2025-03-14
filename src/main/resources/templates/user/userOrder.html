@@ -151,7 +151,15 @@
                         </tr>
                     </tbody>
                 </table>
-                <p><strong>Total:</strong> [[${total}]] $</p>
+
+                <div class="discount-section">
+                    <input type="text" id="discountCode" placeholder="Código de descuento">
+                    <button onclick="applyDiscount()">Aplicar</button>
+                    <span id="discountMessage"></span>
+                </div>
+
+                <p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>
+
             </div>
 
             <div class="payment-section">
@@ -169,63 +177,113 @@
     <footer th:insert="~{user/templateUser.html::footer}"></footer>
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
-            const stripePublicKey = "[[${stripePublicKey}]]";
-            const clientSecret = "[[${clientSecret}]]";
+            // Variables globales (necesitamos clientSecret mutable)
+            let stripe;
+            let elements;
+            let cardElement;
+            let currentClientSecret = "[[${clientSecret}]]";
+            let stripePublicKey = "[[${stripePublicKey}]]";
 
-            if (!stripePublicKey || !clientSecret) {
-                console.error("Clave pública de Stripe o Client Secret no encontrados.");
-                return;
+            // Inicializar Stripe
+            stripe = Stripe(stripePublicKey);
+            initializeStripeElements();
+
+            // Manejador para aplicar descuento
+            window.applyDiscount = async function () {
+                const discountCode = document.getElementById("discountCode").value;
+                const totalElement = document.getElementById("totalAmount");
+                const discountMessage = document.getElementById("discountMessage");
+
+                try {
+                    const response = await fetch("/bordados/orden/validardescuento", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code: discountCode })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || "Error aplicando descuento");
+                    }
+
+                    const data = await response.json();
+                    console.log("Datos recibidos:", data);
+                    
+                    // Verifica que newTotal esté definido y sea un número
+                    if (typeof data.newTotal !== "number") {
+                        throw new Error("El nuevo total no es válido");
+                    }
+
+                    // Actualiza el total en la vista
+                    totalElement.textContent = data.newTotal.toFixed(2); // Asegura 2 decimales
+                    discountMessage.textContent = "✓ Descuento aplicado";
+                    discountMessage.style.color = "green";
+
+                    // Actualiza el Client Secret para Stripe
+                    currentClientSecret = data.newClientSecret;
+                    initializeStripeElements(); // Reinicia los elementos de Stripe
+
+                } catch (error) {
+                    discountMessage.textContent = error.message;
+                    discountMessage.style.color = "red";
+                }
+            };
+            // Función para inicializar/reiniciar elementos de Stripe
+            function initializeStripeElements() {
+                if (cardElement) cardElement.unmount();
+
+                elements = stripe.elements();
+                cardElement = elements.create("card");
+                cardElement.mount("#card-element");
             }
 
-            const stripe = Stripe(stripePublicKey);
-            const elements = stripe.elements();
-            const cardElement = elements.create("card");
-            cardElement.mount("#card-element");
-
-            const form = document.getElementById("payment-form");
-            const submitButton = document.getElementById("submit");
-
-            form.addEventListener("submit", async function (event) {
+            // Manejador de envío del formulario (original modificado)
+            document.getElementById("payment-form").addEventListener("submit", async (event) => {
                 event.preventDefault();
+                const submitButton = document.getElementById("submit");
                 submitButton.disabled = true;
 
-                const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-                    payment_method: {
-                        card: cardElement,
-                    }
+                const { paymentIntent, error } = await stripe.confirmCardPayment(currentClientSecret, {
+                    payment_method: { card: cardElement }
                 });
 
                 if (error) {
                     document.getElementById("card-errors").textContent = error.message;
                     submitButton.disabled = false;
-                } else {
-                    // Llamar al backend para crear la orden
-                    fetch("/bordados/orden/crear", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error("Error en la respuesta del servidor");
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                window.location.href = data.redirectUrl; // Redirige usando la URL del backend
-                            } else {
-                                throw new Error(data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error:", error);
-                            alert(error.message || "Hubo un error al procesar la orden.");
-                        });
+                    return;
                 }
+
+                // Enviar código de descuento junto al paymentIntent.id
+                const discountCode = document.getElementById("discountCode").value;
+
+                fetch("/bordados/orden/crear", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentIntent.id,
+                        discountCode: discountCode // Enviar código al backend
+                    })
+                })
+                    .then(handleResponse)
+                    .catch(handleError);
             });
+
+            // Helpers para manejar respuestas
+            function handleResponse(response) {
+                if (!response.ok) throw response;
+                return response.json().then(data => {
+                    if (data.success) window.location.href = data.redirectUrl;
+                    else throw new Error(data.message);
+                });
+            }
+
+            function handleError(error) {
+                console.error("Error:", error);
+                error.json().then(err => {
+                    alert(err.message || "Error procesando la orden");
+                    document.getElementById("submit").disabled = false;
+                });
+            }
         });
     </script>
     <div th:insert="~{user/templateUser.html::script}"></div>
