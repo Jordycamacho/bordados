@@ -12,14 +12,17 @@ import org.springframework.stereotype.Service;
 import com.example.bordados.DTOs.CustomizedOrderDetailDto;
 import com.example.bordados.model.Cart;
 import com.example.bordados.model.CustomizedOrderDetail;
+import com.example.bordados.model.Discount;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.OrderDetail;
 import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
+import com.example.bordados.model.Enums.DiscountType;
 import com.example.bordados.model.Enums.ShippingStatus;
 import com.example.bordados.repository.CartRepository;
+import com.example.bordados.repository.DiscountRepository;
 import com.example.bordados.repository.OrderCustomRepository;
 import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
@@ -46,38 +49,32 @@ public class OrderServiceImpl {
     private final ProductRepository productRepository;
     private final StripeService stripeService;
     private final PricingServiceImpl pricingService;
+    private final DiscountRepository discountRepository;
 
-    public Order createOrder(Long userId, String paymentIntentId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario con ID " + userId + " no encontrado"));
-
+    public Order createOrder(Long userId, String paymentIntentId, String discountCode) {
+        
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("Usuario con ID " + userId + " no encontrado"));
         List<Cart> cartItems = cartRepository.findByUser(user);
+
         if (cartItems.isEmpty()) {
             throw new IllegalArgumentException("El carrito está vacío");
         }
-
         for (Cart cartItem : cartItems) {
             Product product = cartItem.getProduct();
-            int requestedQuantity = cartItem.getQuantity();
-            int availableQuantity = product.getQuantity();
-
-            if (availableQuantity < requestedQuantity) {
-                throw new IllegalStateException("No hay suficiente cantidad para el producto: " + product.getName() +
-                        ". Disponible: " + availableQuantity + ", solicitado: " + requestedQuantity);
+            if (product.getQuantity() < cartItem.getQuantity()) {
+                throw new IllegalStateException("Stock insuficiente para: " + product.getName());
             }
         }
+         
+        long totalInCents = calculateTotal(cartItems, discountCode);
 
-        // Crear y guardar la orden
         Order order = new Order();
         order.setUser(user);
         order.setCreatedDate(LocalDateTime.now());
         order.setShippingStatus(ShippingStatus.PENDING);
         order.setTrackingNumber(UUID.randomUUID().toString());
-        order.setPaymentIntentId(paymentIntentId);
-
-        long totalInCents = calculateTotal(cartItems);
+        order.setPaymentIntentId(paymentIntentId);    
         order.setTotal(totalInCents / 100.0);
-
         Order savedOrder = orderRepository.save(order);
 
         try {
@@ -88,7 +85,6 @@ public class OrderServiceImpl {
             throw new RuntimeException("Error creando el pago con Stripe: " + e.getMessage(), e);
         }
 
-        // Crear los detalles de la orden
         createOrderDetails(savedOrder, cartItems);
 
         // Actualizar el inventario
@@ -107,15 +103,62 @@ public class OrderServiceImpl {
         return savedOrder;
     }
 
-    private long calculateTotal(List<Cart> cartItems) {
+    private long calculateTotal(List<Cart> cartItems, String discountCode) {
         BigDecimal total = cartItems.stream()
-                .map(cart -> BigDecimal.valueOf(cart.getProduct().getPrice())
-                        .multiply(BigDecimal.valueOf(cart.getQuantity())))
+                .map(cart -> BigDecimal.valueOf(cart.getProduct().getPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Aplicar descuento si existe
+        if (discountCode != null && !discountCode.isEmpty()) {
+            Discount discount = discountRepository.findByCode(discountCode)
+                    .orElseThrow(() -> new IllegalArgumentException("Código inválido"));
+
+            validarDescuento(discount);
+
+            // Descuento de afiliación
+            if (discount.getType() == DiscountType.AFFILIATE) {
+                // Aplicar 10% de descuento
+                total = total.multiply(BigDecimal.valueOf(0.9));
+                
+                // Generar código de 5% para el referidor
+                User referidor = discount.getUser();
+                generarCodigoAfiliacion(referidor);
+            } 
+            // Descuento normal
+            else {
+                BigDecimal porcentaje = BigDecimal.valueOf(discount.getDiscountPercentage() / 100);
+                total = total.subtract(total.multiply(porcentaje));
+            }
+
+            actualizarUsosDescuento(discount);
+        }
 
         return total.multiply(BigDecimal.valueOf(100)).longValue();
     }
 
+    private void validarDescuento(Discount discount) {
+        if (!discount.isValid()) {
+            throw new IllegalArgumentException("Código expirado o sin usos disponibles");
+        }
+    }
+
+    private void actualizarUsosDescuento(Discount discount) {
+        discount.setCurrentUses(discount.getCurrentUses() + 1);
+        discountRepository.save(discount);
+    }
+
+    private void generarCodigoAfiliacion(User referidor) {
+        Discount nuevoCodigo = Discount.builder()
+                .code(UUID.randomUUID().toString().substring(0, 8))
+                .discountPercentage(5.0)
+                .type(DiscountType.AFFILIATE)
+                .user(referidor)
+                .expirationDate(LocalDateTime.now().plusMonths(1))
+                .maxUses(1)
+                .currentUses(0)
+                .build();
+        discountRepository.save(nuevoCodigo);
+    }
     private void createOrderDetails(Order order, List<Cart> cartItems) {
         for (Cart cart : cartItems) {
             OrderDetail orderDetail = new OrderDetail();

@@ -1,6 +1,7 @@
 package com.example.bordados.controller.user;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.DTOs.CustomizedOrderDetailDto;
 import com.example.bordados.model.CustomizedOrderDetail;
+import com.example.bordados.model.Discount;
 import com.example.bordados.model.Order;
 import com.example.bordados.model.OrderCustom;
 import com.example.bordados.model.OrderDetail;
@@ -29,6 +31,7 @@ import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
 import com.example.bordados.repository.CustomizedOrderDetailRepository;
+import com.example.bordados.repository.DiscountRepository;
 import com.example.bordados.repository.OrderCustomRepository;
 import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
@@ -59,12 +62,15 @@ public class OrderController {
     private final OrderCustomRepository orderCustomRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final CustomizedOrderDetailRepository customizedOrderDetailRepository;
+    private final DiscountRepository discountRepository;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
             ProductService productService, StripeService stripeService, PricingServiceImpl pricingService,
-            OrderRepository orderRepository, OrderCustomRepository orderCustomRepository, OrderDetailRepository orderDetailRepository
-            , CustomizedOrderDetailRepository customizedOrderDetailRepository) {
+            OrderRepository orderRepository, OrderCustomRepository orderCustomRepository,
+            OrderDetailRepository orderDetailRepository, DiscountRepository discountRepository,
+            CustomizedOrderDetailRepository customizedOrderDetailRepository) {
         this.productService = productService;
+        this.discountRepository = discountRepository;
         this.customizedOrderDetailRepository = customizedOrderDetailRepository;
         this.orderRepository = orderRepository;
         this.orderDetailRepository = orderDetailRepository;
@@ -103,12 +109,10 @@ public class OrderController {
             String clientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
             model.addAttribute("clientSecret", clientSecret);
 
-            System.out.println("Stripe Public Key:---------------------------------------- " + stripePublicKey);
-            System.out.println("Client Secret: --------------------------------------------" + clientSecret);
             return "user/userOrder";
         } catch (Exception e) {
             model.addAttribute("error",
-                    "Ocurrió un error al cargar la orden:------------------------------------ " + e.getMessage());
+                    "Ocurrió un error al cargar la orden:" + e.getMessage());
             return "user/userOrder";
         }
     }
@@ -118,12 +122,13 @@ public class OrderController {
         Map<String, Object> response = new HashMap<>();
         try {
             String paymentIntentId = request.get("paymentIntentId");
+            String discountCode = request.get("discountCode");
             User user = userService.getCurrentUser();
-            Order order = orderService.createOrder(user.getId(), paymentIntentId);
+            Order order = orderService.createOrder(user.getId(), paymentIntentId, discountCode);
 
             response.put("success", true);
             response.put("message", "Orden creada exitosamente. Número de seguimiento: " + order.getTrackingNumber());
-            response.put("redirectUrl", "/bordados"); // URL de redirección
+            response.put("redirectUrl", "/bordados");
 
             return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
@@ -137,6 +142,50 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/validardescuento")
+    public ResponseEntity<?> validarDescuento(@RequestBody Map<String, String> request) {
+        String codigo = request.get("code");
+        
+        try {
+            // 1. Validar el código de descuento
+            Discount discount = discountRepository.findByCode(codigo)
+                    .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
+    
+            if (!discount.isValid()) {
+                throw new IllegalArgumentException("Código expirado o ya usado");
+            }
+    
+            // 2. Obtener el usuario y los productos en el carrito
+            User user = userService.getCurrentUser();
+            List<CartDTO> cartItems = cartService.getCartByUserId(user.getId());
+    
+            // 3. Calcular el total sin descuento
+            double total = cartItems.stream()
+                    .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                    .sum();
+            double shippingCost = 5.00;
+            double stripeFee = (total + shippingCost) * 0.029 + 0.30;
+            double finalTotal = total + shippingCost + stripeFee;
+    
+            double discountPercentage = discount.getDiscountPercentage() / 100.0;
+            double newTotal = finalTotal * (1 - discountPercentage);
+    
+            long amountInCents = (long) (newTotal * 100);
+            String newClientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
+    
+            Map<String, Object> response = new HashMap<>();
+            response.put("newTotal", newTotal);
+            response.put("newClientSecret", newClientSecret);
+    
+            return ResponseEntity.ok(response);
+    
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
+        }
+    }
+    
     @PostMapping("/createCustomOrder")
     public String createOrderCustom(@ModelAttribute CustomizedOrderDetailDto customOrderDetail,
             RedirectAttributes redirectAttributes) {
