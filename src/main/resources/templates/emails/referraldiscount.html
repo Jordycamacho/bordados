@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>¡Descuento por Referencia!</title>
+    <style>
+        /* Mantenemos los mismos estilos del ejemplo anterior para consistencia */
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .header { text-align: center; padding: 20px 0; }
+        .header h1 { color: #333333; }
+        .content { padding: 20px; }
+        .content p { color: #555555; line-height: 1.6; }
+        .discount-code { background-color: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0; }
+        .discount-code h2 { color: #28a745; margin: 0; }
+        .footer { text-align: center; padding: 20px; color: #777777; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>¡Has ganado un descuento, <span th:text="${name}"></span>!</h1>
+        </div>
+        <div class="content">
+            <p>¡Felicidades! Alguien ha usado tu código de referencia y por eso has ganado un código de descuento exclusivo.</p>
+            <div class="discount-code">
+                <h2 th:text="${discountCode}"></h2>
+            </div>
+            <p>Este código te da un <strong>5% de descuento</strong> en tu próxima compra.</p>
+            <p>Fecha de expiración: [[${#temporals.format(expirationDate, 'dd/MM/yyyy')}]]</p>
+            <p>¡Aprovecha esta oportunidad para seguir disfrutando de nuestros productos!</p>
+        </div>
+        <div class="footer">
+            <p>Equipo de GAST</p>
+        </div>
+    </div>
+</body>
+</html>
