@@ -16,6 +16,7 @@ import org.thymeleaf.context.Context;
 
 import com.example.bordados.DTOs.CartDTO;
 import com.example.bordados.model.CustomizedOrderDetail;
+import com.example.bordados.model.Discount;
 import com.example.bordados.model.User;
 
 @Service
@@ -67,7 +68,7 @@ public class EmailService {
 
         helper.setTo(email);
         helper.setSubject("Confirmación de Orden #" + orderNumber);
-        helper.setText(htmlContent, true); // true indica que es HTML
+        helper.setText(htmlContent, true);
 
         mailSender.send(mimeMessage);
     }
@@ -138,5 +139,23 @@ public class EmailService {
         } catch (MessagingException e) {
             throw new RuntimeException("Error al enviar el correo electrónico", e);
         }
+    }
+
+    public void sendReferedEmail(String email, String name, Discount discount) throws MessagingException {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+        
+        Context context = new Context();
+        context.setVariable("name", name);
+        context.setVariable("discountCode", discount.getCode());
+        context.setVariable("expirationDate", discount.getExpirationDate());
+        
+        String htmlContent = templateEngine.process("emails/referraldiscount", context);
+        
+        helper.setTo(email);
+        helper.setSubject("¡Has ganado un descuento por referir amigos!");
+        helper.setText(htmlContent, true);
+        
+        mailSender.send(mimeMessage);
     }
 }

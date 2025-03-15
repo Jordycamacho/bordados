@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ import com.example.bordados.repository.DiscountRepository;
 import com.example.bordados.repository.OrderCustomRepository;
 import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
+import com.example.bordados.repository.UserRepository;
 import com.example.bordados.service.CartService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
@@ -63,13 +65,15 @@ public class OrderController {
     private final OrderDetailRepository orderDetailRepository;
     private final CustomizedOrderDetailRepository customizedOrderDetailRepository;
     private final DiscountRepository discountRepository;
+    private final UserRepository userRepository;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
             ProductService productService, StripeService stripeService, PricingServiceImpl pricingService,
             OrderRepository orderRepository, OrderCustomRepository orderCustomRepository,
             OrderDetailRepository orderDetailRepository, DiscountRepository discountRepository,
-            CustomizedOrderDetailRepository customizedOrderDetailRepository) {
+            CustomizedOrderDetailRepository customizedOrderDetailRepository, UserRepository userRepository) {
         this.productService = productService;
+        this.userRepository = userRepository;
         this.discountRepository = discountRepository;
         this.customizedOrderDetailRepository = customizedOrderDetailRepository;
         this.orderRepository = orderRepository;
@@ -96,9 +100,7 @@ public class OrderController {
             double total = cartItems.stream()
                     .mapToDouble(item -> item.getPrice() * item.getQuantity())
                     .sum();
-            double shippingCost = 5.00;
-            double stripeFee = (total + shippingCost) * 0.029 + 0.30;
-            double finalTotal = total + shippingCost + stripeFee;
+            double finalTotal = total;
 
             long amountInCents = (long) (finalTotal * 100);
 
@@ -145,30 +147,47 @@ public class OrderController {
     @PostMapping("/validardescuento")
     public ResponseEntity<?> validarDescuento(@RequestBody Map<String, String> request) {
         String codigo = request.get("code");
-        
-        try {
-            // 1. Validar el código de descuento
-            Discount discount = discountRepository.findByCode(codigo)
-                    .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
     
-            if (!discount.isValid()) {
-                throw new IllegalArgumentException("Código expirado o ya usado");
+        try {
+            User currentUser = userService.getCurrentUser();
+            double discountPercentage = 0.0;
+            Optional<User> referrerOpt = userRepository.findUserByAffiliateCode(codigo);
+            Discount discount = null; // Variable para descuentos normales
+    
+            if (referrerOpt.isPresent()) {
+                // Lógica de afiliación
+                if (currentUser.getReferrer() != null) {
+                    throw new IllegalArgumentException("Ya tienes un referido");
+                }
+    
+                if (orderRepository.countByUser(currentUser) > 100) {
+                    throw new IllegalArgumentException("Válido solo para primera compra");
+                }
+    
+                discountPercentage = 10.0;
+    
+            } else {
+                // Lógica de descuento normal
+                discount = discountRepository.findByCode(codigo)
+                    .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
+                
+                if (!discount.isValid()) {
+                    throw new IllegalArgumentException("Código expirado o ya usado");
+                }
+                discountPercentage = discount.getDiscountPercentage();
             }
     
-            // 2. Obtener el usuario y los productos en el carrito
-            User user = userService.getCurrentUser();
-            List<CartDTO> cartItems = cartService.getCartByUserId(user.getId());
-    
-            // 3. Calcular el total sin descuento
+            // Calcular totales
+            List<CartDTO> cartItems = cartService.getCartByUserId(currentUser.getId());
+            
             double total = cartItems.stream()
                     .mapToDouble(item -> item.getPrice() * item.getQuantity())
                     .sum();
-            double shippingCost = 5.00;
-            double stripeFee = (total + shippingCost) * 0.029 + 0.30;
-            double finalTotal = total + shippingCost + stripeFee;
+            
+            double finalTotal = total;
     
-            double discountPercentage = discount.getDiscountPercentage() / 100.0;
-            double newTotal = finalTotal * (1 - discountPercentage);
+            // Aplicar descuento (convertir porcentaje a decimal)
+            double newTotal = finalTotal * (1 - (discountPercentage / 100.0));
     
             long amountInCents = (long) (newTotal * 100);
             String newClientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
@@ -182,10 +201,11 @@ public class OrderController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
         }
     }
-    
+
     @PostMapping("/createCustomOrder")
     public String createOrderCustom(@ModelAttribute CustomizedOrderDetailDto customOrderDetail,
             RedirectAttributes redirectAttributes) {

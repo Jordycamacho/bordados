@@ -21,5 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Método para buscar órdenes normales con un estado de envío específico
     List<Order> findByShippingStatus(ShippingStatus status);
+
+    Long countByUser(User user);
 }
 

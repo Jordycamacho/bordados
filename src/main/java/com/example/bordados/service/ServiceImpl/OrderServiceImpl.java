@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -52,8 +53,9 @@ public class OrderServiceImpl {
     private final DiscountRepository discountRepository;
 
     public Order createOrder(Long userId, String paymentIntentId, String discountCode) {
-        
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("Usuario con ID " + userId + " no encontrado"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario con ID " + userId + " no encontrado"));
         List<Cart> cartItems = cartRepository.findByUser(user);
 
         if (cartItems.isEmpty()) {
@@ -65,15 +67,15 @@ public class OrderServiceImpl {
                 throw new IllegalStateException("Stock insuficiente para: " + product.getName());
             }
         }
-         
-        long totalInCents = calculateTotal(cartItems, discountCode);
+
+        long totalInCents = calculateTotal(cartItems, discountCode, user);
 
         Order order = new Order();
         order.setUser(user);
         order.setCreatedDate(LocalDateTime.now());
         order.setShippingStatus(ShippingStatus.PENDING);
         order.setTrackingNumber(UUID.randomUUID().toString());
-        order.setPaymentIntentId(paymentIntentId);    
+        order.setPaymentIntentId(paymentIntentId);
         order.setTotal(totalInCents / 100.0);
         Order savedOrder = orderRepository.save(order);
 
@@ -103,34 +105,38 @@ public class OrderServiceImpl {
         return savedOrder;
     }
 
-    private long calculateTotal(List<Cart> cartItems, String discountCode) {
+    private long calculateTotal(List<Cart> cartItems, String discountCode, User user) {
         BigDecimal total = cartItems.stream()
                 .map(cart -> BigDecimal.valueOf(cart.getProduct().getPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Aplicar descuento si existe
         if (discountCode != null && !discountCode.isEmpty()) {
-            Discount discount = discountRepository.findByCode(discountCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Código inválido"));
+            Optional<User> referrerOpt = userRepository.findUserByAffiliateCode(discountCode);
+            if (referrerOpt.isPresent()) {
+                User referrer = referrerOpt.get();
+                
+                if (user.getReferrer() != null) {
+                    throw new IllegalArgumentException("Ya tienes un referido");
+                }
+                
+                if (orderRepository.countByUser(user) > 0) {
+                    throw new IllegalArgumentException("Código válido solo para primera compra");
+                }
 
-            validarDescuento(discount);
-
-            // Descuento de afiliación
-            if (discount.getType() == DiscountType.AFFILIATE) {
-                // Aplicar 10% de descuento
                 total = total.multiply(BigDecimal.valueOf(0.9));
                 
-                // Generar código de 5% para el referidor
-                User referidor = discount.getUser();
-                generarCodigoAfiliacion(referidor);
-            } 
-            // Descuento normal
-            else {
+                user.setReferrer(referrer);
+                userRepository.save(user);
+                
+                generarCodigoAfiliacion(referrer);
+            }else {
+                Discount discount = discountRepository.findByCode(discountCode).orElseThrow(() -> new IllegalArgumentException("Código inválido"));
+                validarDescuento(discount);
+
                 BigDecimal porcentaje = BigDecimal.valueOf(discount.getDiscountPercentage() / 100);
                 total = total.subtract(total.multiply(porcentaje));
+                actualizarUsosDescuento(discount);
             }
-
-            actualizarUsosDescuento(discount);
         }
 
         return total.multiply(BigDecimal.valueOf(100)).longValue();
@@ -159,6 +165,7 @@ public class OrderServiceImpl {
                 .build();
         discountRepository.save(nuevoCodigo);
     }
+
     private void createOrderDetails(Order order, List<Cart> cartItems) {
         for (Cart cart : cartItems) {
             OrderDetail orderDetail = new OrderDetail();
