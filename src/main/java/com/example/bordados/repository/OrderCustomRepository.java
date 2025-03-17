@@ -20,4 +20,6 @@ public interface OrderCustomRepository extends JpaRepository<OrderCustom, Long> 
 
     // Método para buscar órdenes personalizadas con un estado de envío específico
     List<OrderCustom> findByShippingStatus(ShippingStatus status);
+
+    Long countByUser(User user);
 }

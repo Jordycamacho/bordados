@@ -181,7 +181,7 @@ public class OrderServiceImpl {
     }
 
     @Transactional
-    public OrderCustom createOrderCustom(CustomizedOrderDetailDto dto) {
+    public OrderCustom createOrderCustom(CustomizedOrderDetailDto dto, String paymentIntentId) {
         User user = userService.getCurrentUser();
 
         Product product = dto.getProduct();
@@ -201,6 +201,7 @@ public class OrderServiceImpl {
         orderCustom.setCreatedDate(LocalDateTime.now());
         orderCustom.setShippingStatus(ShippingStatus.PENDING);
         orderCustom.setTrackingNumber(UUID.randomUUID().toString());
+        orderCustom.setPaymentIntentId(paymentIntentId);
 
         // Calcular el costo adicional
         double additionalCost = calculateAdditionalCost(dto, pricing);

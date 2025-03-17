@@ -45,6 +45,8 @@ public class OrderCustom {
     private boolean productStatus;
 
     private String paymentIntentId; 
+    
+    private String clientSecret;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

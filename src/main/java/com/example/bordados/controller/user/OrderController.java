@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.bordados.DTOs.CartDTO;
@@ -43,6 +44,8 @@ import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.OrderServiceImpl;
 import com.example.bordados.service.ServiceImpl.PricingServiceImpl;
 import com.example.bordados.service.ServiceImpl.StripeService;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
 
 @Controller
 @RequestMapping("/bordados/orden")
@@ -147,57 +150,57 @@ public class OrderController {
     @PostMapping("/validardescuento")
     public ResponseEntity<?> validarDescuento(@RequestBody Map<String, String> request) {
         String codigo = request.get("code");
-    
+
         try {
             User currentUser = userService.getCurrentUser();
             double discountPercentage = 0.0;
             Optional<User> referrerOpt = userRepository.findUserByAffiliateCode(codigo);
             Discount discount = null; // Variable para descuentos normales
-    
+
             if (referrerOpt.isPresent()) {
                 // Lógica de afiliación
                 if (currentUser.getReferrer() != null) {
                     throw new IllegalArgumentException("Ya tienes un referido");
                 }
-    
-                if (orderRepository.countByUser(currentUser) > 100) {
+
+                if (orderRepository.countByUser(currentUser) > 1) {
                     throw new IllegalArgumentException("Válido solo para primera compra");
                 }
-    
+
                 discountPercentage = 10.0;
-    
+
             } else {
                 // Lógica de descuento normal
                 discount = discountRepository.findByCode(codigo)
-                    .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
-                
+                        .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
+
                 if (!discount.isValid()) {
                     throw new IllegalArgumentException("Código expirado o ya usado");
                 }
                 discountPercentage = discount.getDiscountPercentage();
             }
-    
+
             // Calcular totales
             List<CartDTO> cartItems = cartService.getCartByUserId(currentUser.getId());
-            
+
             double total = cartItems.stream()
                     .mapToDouble(item -> item.getPrice() * item.getQuantity())
                     .sum();
-            
+
             double finalTotal = total;
-    
+
             // Aplicar descuento (convertir porcentaje a decimal)
             double newTotal = finalTotal * (1 - (discountPercentage / 100.0));
-    
+
             long amountInCents = (long) (newTotal * 100);
             String newClientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
-    
+
             Map<String, Object> response = new HashMap<>();
             response.put("newTotal", newTotal);
             response.put("newClientSecret", newClientSecret);
-    
+
             return ResponseEntity.ok(response);
-    
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
@@ -207,31 +210,48 @@ public class OrderController {
     }
 
     @PostMapping("/createCustomOrder")
-    public String createOrderCustom(@ModelAttribute CustomizedOrderDetailDto customOrderDetail,
+    public String createOrderCustom(@RequestParam("paymentIntentId") String paymentIntentId,
+            @ModelAttribute CustomizedOrderDetailDto customOrderDetail,
             RedirectAttributes redirectAttributes) {
-        User user = userService.getCurrentUser();
 
-        if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "Debes iniciar sesión para realizar una compra.");
-            return "redirect:/login";
+        try {
+            User user = userService.getCurrentUser();
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("error", "Debes iniciar sesión para realizar una compra.");
+                return "redirect:/login";
+            }
+            // Verificar estado del pago
+            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+            if (!"succeeded".equals(paymentIntent.getStatus())) {
+                redirectAttributes.addFlashAttribute("error", "El pago no fue exitoso");
+                return "redirect:/personalizar/" + customOrderDetail.getProductId();
+            }
+
+            // Resto de tu lógica actual...
+            // Asignar el producto al DTO
+            Product product = productService.getProductById(customOrderDetail.getProductId());
+            customOrderDetail.setProduct(product);
+
+            // Obtener la configuración de precios
+            PricingConfiguration pricing = pricingService.getPricingConfiguration();
+
+            // Calcular el costo adicional
+            double additionalCost = calculateAdditionalCost(customOrderDetail, pricing);
+            customOrderDetail.setAdditionalCost(additionalCost);
+            OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail, paymentIntentId);
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Orden creada! Número de seguimiento: " + orderCustom.getTrackingNumber());
+
+            return "redirect:/bordados";
+
+        } catch (StripeException e) {
+            redirectAttributes.addFlashAttribute("error", "Error verificando pago: " + e.getMessage());
+            return "redirect:/personalizar/" + customOrderDetail.getProductId();
         }
 
-        // Asignar el producto al DTO
-        Product product = productService.getProductById(customOrderDetail.getProductId());
-        customOrderDetail.setProduct(product);
-
-        // Obtener la configuración de precios
-        PricingConfiguration pricing = pricingService.getPricingConfiguration();
-
-        // Calcular el costo adicional
-        double additionalCost = calculateAdditionalCost(customOrderDetail, pricing);
-        customOrderDetail.setAdditionalCost(additionalCost);
-
         // Crear la orden personalizada
-        OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail);
-        redirectAttributes.addFlashAttribute("success",
-                "Orden personalizada creada exitosamente. Número de seguimiento: " + orderCustom.getTrackingNumber());
-        return "redirect:/bordados";
+    
     }
 
     private double calculateAdditionalCost(CustomizedOrderDetailDto dto, PricingConfiguration pricing) {
@@ -344,5 +364,21 @@ public class OrderController {
         model.addAttribute("customizedOrderDetails", customizedOrderDetails);
 
         return "/user/customOrderDetail";
+    }
+
+    @PostMapping("/createpaymentintent")
+    @ResponseBody
+    public ResponseEntity<?> createDynamicPaymentIntent(@RequestBody Map<String, Object> request) {
+        try {
+            if (!request.containsKey("amount")) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Falta el campo 'amount'"));
+        }
+            long amount = Long.parseLong(request.get("amount").toString());
+            String currency = request.get("currency").toString();
+            String clientSecret = stripeService.createPaymentIntent(amount, currency, null);
+            return ResponseEntity.ok(Collections.singletonMap("clientSecret", clientSecret));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 }
