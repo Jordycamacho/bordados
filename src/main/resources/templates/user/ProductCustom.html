@@ -8,6 +8,7 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         .preview-button {
             display: inline-block;
@@ -46,6 +47,12 @@
             background: #333;
         }
 
+        .error-message {
+            color: #dc3545;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
         /* En móvil, se apilan las columnas */
         @media (max-width: 768px) {
             .order-summary {
@@ -75,7 +82,7 @@
                 <p class="product-price" th:text="${product.price} + '0 $'"></p>
 
                 <form th:if="${product.quantity > 0}" th:action="@{/bordados/orden/createCustomOrder}" method="post"
-                    enctype="multipart/form-data" onsubmit="validateForm(event)">
+                    enctype="multipart/form-data" id="main-form">
                     <input type="hidden" name="productId" th:value="${product.id}">
                     <!-- Cantidad -->
                     <div class="form-group">
@@ -117,8 +124,10 @@
                         <label>¿Qué tamaño de bordado quieres?(El ancho es conforme al diseño)*</label>
                         <select name="embroideryType" class="form-select" required>
                             <option value="Pequeño">Pequeño( 8 cm de altura)</option>
-                            <option value="Mediano">Mediano( 15 cm de altura ) + [[${pricing.mediumSizeFirstEmbroideryPrice}]] EUR</option>
-                            <option value="Grande">Grande( 17 cm de altura) + [[${pricing.largeSizeFirstEmbroideryPrice}]] EUR</option>
+                            <option value="Mediano">Mediano( 15 cm de altura ) +
+                                [[${pricing.mediumSizeFirstEmbroideryPrice}]] EUR</option>
+                            <option value="Grande">Grande( 17 cm de altura) +
+                                [[${pricing.largeSizeFirstEmbroideryPrice}]] EUR</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -159,8 +168,10 @@
                             <label>¿Qué tamaño de bordado quieres? (El ancho es conforme al diseño)*</label>
                             <select name="secondEmbroideryType" class="form-select" required>
                                 <option value="Pequeño">Pequeño( 8 cm de altura)</option>
-                                <option value="Mediano">Mediano( 15 cm de altura) + [[${pricing.mediumSizeSecondEmbroideryPrice}]] EUR</option>
-                                <option value="Grande">Grande( 17 cm de altura) + [[${pricing.largeSizeSecondEmbroideryPrice}]] EUR</option>
+                                <option value="Mediano">Mediano( 15 cm de altura) +
+                                    [[${pricing.mediumSizeSecondEmbroideryPrice}]] EUR</option>
+                                <option value="Grande">Grande( 17 cm de altura) +
+                                    [[${pricing.largeSizeSecondEmbroideryPrice}]] EUR</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -218,26 +229,16 @@
                                     data-color="Negro" onclick="selectThreadColor('Negro', '#000000')"></button>
                                 <button type="button" class="color-option" style="background-color: #ffffff;"
                                     data-color="Blanco" onclick="selectThreadColor('Blanco', '#ffffff')"></button>
-                                <button type="button" class="color-option" style="background-color: #ff0000;"
-                                    data-color="Rojo" onclick="selectThreadColor('Rojo', '#ff0000')"></button>
-                                <button type="button" class="color-option" style="background-color: #00ff00;"
-                                    data-color="Verde" onclick="selectThreadColor('Verde', '#00ff00')"></button>
-                                <button type="button" class="color-option" style="background-color: #0000ff;"
-                                    data-color="Azul" onclick="selectThreadColor('Azul', '#0000ff')"></button>
-                                <button type="button" class="color-option" style="background-color: #ffff00;"
-                                    data-color="Amarillo" onclick="selectThreadColor('Amarillo', '#ffff00')"></button>
-                                <button type="button" class="color-option" style="background-color: #ff00ff;"
-                                    data-color="Magenta" onclick="selectThreadColor('Magenta', '#ff00ff')"></button>
-                                <button type="button" class="color-option" style="background-color: #00ffff;"
-                                    data-color="Cian" onclick="selectThreadColor('Cian', '#00ffff')"></button>
-                                <button type="button" class="color-option" style="background-color: #800080;"
-                                    data-color="Morado" onclick="selectThreadColor('Morado', '#800080')"></button>
-                                <button type="button" class="color-option" style="background-color: #ffa500;"
-                                    data-color="Naranja" onclick="selectThreadColor('Naranja', '#ffa500')"></button>
+
                             </div>
                             <input type="hidden" name="sleeveThreadColor" id="selectedThreadColor">
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <p><strong>Total Estimado:</strong> <span id="dynamicTotal">0.00</span> $</p>
+                    </div>
+
                     <!-- nesecita estilos  -->
                     <div class="form-group">
                         <a th:href="@{/bordados/producto/preview/{id}(id=${product.id})}" class="preview-button">
@@ -245,120 +246,236 @@
                         </a>
                     </div>
                     <!-- Botón para enviar    <button type="submit">Comprar</button>-->
-                    
+
                     <div class="payment-section">
                         <h2>Pago con Tarjeta</h2>
-                        <form id="payment-form">
-                            <div id="card-element"></div>
-                            <div id="card-errors" role="alert"></div>
-                            <button id="submit" class="checkout-btn">Pagar</button>
-                            <div id="payment-message" class="hidden"></div>
-                        </form>
+                        <div id="card-element"></div>
+                        <div id="card-errors" role="alert"></div>
+                        <input type="hidden" name="paymentIntentId" id="paymentIntentId">
+                        <button type="submit" class="checkout-btn">Pagar</button>
                     </div>
                 </form>
-            </div>
-        </section>
-        <!-- Guía de Tallas -->
-        <section class="size-guide">
-            <h2>Guía de Tallas</h2>
-            <div class="tables-container">
-                <!-- Tabla para Camisas -->
-                <div class="size-table">
-                    <h3>Camisas</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Talla</th>
-                                <th>Ancho (cm)</th>
-                                <th>Largo (cm)</th>
-                                <th>Manga (cm)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>S</td>
-                                <td>50</td>
-                                <td>70</td>
-                                <td>60</td>
-                            </tr>
-                            <tr>
-                                <td>M</td>
-                                <td>53</td>
-                                <td>72</td>
-                                <td>62</td>
-                            </tr>
-                            <tr>
-                                <td>L</td>
-                                <td>56</td>
-                                <td>74</td>
-                                <td>64</td>
-                            </tr>
-                            <tr>
-                                <td>XL</td>
-                                <td>59</td>
-                                <td>76</td>
-                                <td>66</td>
-                            </tr>
-                            <tr>
-                                <td>2XL</td>
-                                <td>62</td>
-                                <td>78</td>
-                                <td>68</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Tabla para Sudaderas -->
-                <div class="size-table">
-                    <h3>Sudaderas</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Talla</th>
-                                <th>Ancho (cm)</th>
-                                <th>Largo (cm)</th>
-                                <th>Manga (cm)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>S</td>
-                                <td>55</td>
-                                <td>65</td>
-                                <td>58</td>
-                            </tr>
-                            <tr>
-                                <td>M</td>
-                                <td>58</td>
-                                <td>68</td>
-                                <td>60</td>
-                            </tr>
-                            <tr>
-                                <td>L</td>
-                                <td>61</td>
-                                <td>71</td>
-                                <td>62</td>
-                            </tr>
-                            <tr>
-                                <td>XL</td>
-                                <td>64</td>
-                                <td>74</td>
-                                <td>64</td>
-                            </tr>
-                            <tr>
-                                <td>2XL</td>
-                                <td>67</td>
-                                <td>77</td>
-                                <td>66</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+
+                <!-- Guía de Tallas -->
+                <section class="size-guide">
+                    <h2>Guía de Tallas</h2>
+                    <div class="tables-container">
+                        <!-- Tabla para Camisas -->
+                        <div class="size-table">
+                            <h3>Camisas</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Talla</th>
+                                        <th>Ancho (cm)</th>
+                                        <th>Largo (cm)</th>
+                                        <th>Manga (cm)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>S</td>
+                                        <td>50</td>
+                                        <td>70</td>
+                                        <td>60</td>
+                                    </tr>
+                                    <tr>
+                                        <td>M</td>
+                                        <td>53</td>
+                                        <td>72</td>
+                                        <td>62</td>
+                                    </tr>
+                                    <tr>
+                                        <td>L</td>
+                                        <td>56</td>
+                                        <td>74</td>
+                                        <td>64</td>
+                                    </tr>
+                                    <tr>
+                                        <td>XL</td>
+                                        <td>59</td>
+                                        <td>76</td>
+                                        <td>66</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2XL</td>
+                                        <td>62</td>
+                                        <td>78</td>
+                                        <td>68</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Tabla para Sudaderas -->
+                        <div class="size-table">
+                            <h3>Sudaderas</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Talla</th>
+                                        <th>Ancho (cm)</th>
+                                        <th>Largo (cm)</th>
+                                        <th>Manga (cm)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>S</td>
+                                        <td>55</td>
+                                        <td>65</td>
+                                        <td>58</td>
+                                    </tr>
+                                    <tr>
+                                        <td>M</td>
+                                        <td>58</td>
+                                        <td>68</td>
+                                        <td>60</td>
+                                    </tr>
+                                    <tr>
+                                        <td>L</td>
+                                        <td>61</td>
+                                        <td>71</td>
+                                        <td>62</td>
+                                    </tr>
+                                    <tr>
+                                        <td>XL</td>
+                                        <td>64</td>
+                                        <td>74</td>
+                                        <td>64</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2XL</td>
+                                        <td>67</td>
+                                        <td>77</td>
+                                        <td>66</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
     </main>
     <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+
     <script>
+
+
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const stripePublicKey = "[[${stripePublicKey}]]";
+            const stripe = Stripe(stripePublicKey);
+            const elements = stripe.elements();
+            const cardElement = elements.create('card');
+            cardElement.mount('#card-element');
+
+            // Inicializar precios desde el backend usando Thymeleaf
+            const pricing = {
+                mediumSizeFirstEmbroideryPrice: [[${ pricing.mediumSizeFirstEmbroideryPrice }]],
+                largeSizeFirstEmbroideryPrice: [[${ pricing.largeSizeFirstEmbroideryPrice }]],
+                secondDesignPrice: [[${ pricing.secondDesignPrice }]],
+                mediumSizeSecondEmbroideryPrice: [[${ pricing.mediumSizeSecondEmbroideryPrice }]],
+                largeSizeSecondEmbroideryPrice: [[${ pricing.largeSizeSecondEmbroideryPrice }]],
+                sleevePrice: [[${ pricing.sleevePrice }]]
+            };
+
+            const productPrice = [[${ product.price }]];
+
+            // Función para calcular el total dinámico
+            function calculateTotal() {
+                let total = productPrice || 0;
+                const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+                // Costo del primer bordado
+                const embroideryType = document.querySelector('select[name="embroideryType"]').value;
+                if (embroideryType === "Mediano") total += pricing.mediumSizeFirstEmbroideryPrice;
+                if (embroideryType === "Grande") total += pricing.largeSizeFirstEmbroideryPrice;
+
+                // Costo del segundo bordado si aplica
+                if (document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true') {
+                    total += pricing.secondDesignPrice;
+                    const secondEmbroideryType = document.querySelector('select[name="secondEmbroideryType"]').value;
+                    if (secondEmbroideryType === "Mediano") total += pricing.mediumSizeSecondEmbroideryPrice;
+                    if (secondEmbroideryType === "Grande") total += pricing.largeSizeSecondEmbroideryPrice;
+                }
+
+                // Costo de manga si aplica
+                if (document.querySelector('input[name="hasSleeveEmbroidery"]:checked').value === 'true') {
+                    total += pricing.sleevePrice;
+                }
+
+                return total * quantity;
+            }
+
+            function updateTotalDisplay() {
+                const total = calculateTotal();
+                document.getElementById('dynamicTotal').textContent = total.toFixed(2);
+            }
+
+            // Añadir event listeners a todos los elementos que afectan el precio
+            document.querySelectorAll('select, input[type="radio"], #quantity').forEach(element => {
+                element.addEventListener('change', updateTotalDisplay);
+            });
+
+            updateTotalDisplay();
+
+            // Manejador de envío del formulario
+            async function handleSubmit(event) {
+                event.preventDefault();
+                const form = event.target;
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+
+                // Validar formulario
+                if (!validateForm()) {
+                    submitButton.disabled = false;
+                    return;
+                }
+
+                try {
+                    // Calcular el total y convertirlo a centavos
+                    const total = calculateTotal();
+                    if (total <= 0) throw new Error("El total debe ser mayor que cero");
+                    const amountInCents = Math.round(total * 100);
+
+                    // Crear PaymentIntent dinámico
+                    const response = await fetch('/bordados/orden/createpaymentintent', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: amountInCents, currency: 'usd' })
+                    });
+
+                    if (!response.ok) throw new Error('Error creando intención de pago');
+
+                    const { clientSecret } = await response.json();
+
+                    // Confirmar pago con Stripe
+                    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: { card: cardElement }
+                    });
+
+                    if (error) throw error;
+
+                    // Asignar paymentIntentId al campo oculto
+                    document.getElementById('paymentIntentId').value = paymentIntent.id;
+
+                    // Enviar formulario
+                    form.submit();
+                } catch (error) {
+                    document.getElementById('card-errors').textContent = error.message;
+                    submitButton.disabled = false;
+                }
+            }
+
+            // Asignar manejador al formulario
+            document.getElementById('main-form').addEventListener('submit', handleSubmit);
+        });
+
+
+
+
+
+
         function updateQuantity(change) {
             let quantityInput = document.getElementById('quantity');
             let maxQuantity = parseInt(quantityInput.getAttribute('max'));
@@ -367,21 +484,21 @@
                 quantityInput.value = newValue;
             }
         }
-        
+
         function selectColor(event) {
             event.preventDefault();
             document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
             document.getElementById('selectedColor').value = event.target.dataset.color;
         }
-        
+
         function selectSize(event) {
             event.preventDefault();
             document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
             document.getElementById('selectedSize').value = event.target.dataset.size;
         }
-        
+
         function selectPlacement(event, inputId) {
             event.preventDefault();
             document.querySelectorAll('.placement-option').forEach(btn => btn.classList.remove('selected'));
@@ -399,7 +516,6 @@
             document.getElementById(sectionId).style.display = show ? "block" : "none";
         }
 
-        
         function validateForm(event) {
             let selectedColor = document.getElementById("selectedColor").value;
             let selectedSize = document.getElementById("selectedSize").value;
@@ -422,7 +538,38 @@
                 alert("Por favor, completa todos los campos del segundo bordado antes de continuar.");
             }
         }
-    
+
+        function validateForm() {
+            let isValid = true;
+            const errorContainer = document.getElementById('card-errors');
+            errorContainer.textContent = '';
+
+            // Validar campos requeridos
+            if (!document.getElementById('selectedColor').value) {
+                isValid = false;
+                errorContainer.textContent += 'Selecciona un color\n';
+            }
+
+            if (!document.getElementById('selectedSize').value) {
+                isValid = false;
+                errorContainer.textContent += 'Selecciona una talla\n';
+            }
+
+            if (!document.querySelector('input[name="firstEmbroideryFile"]').files[0]) {
+                isValid = false;
+                errorContainer.textContent += 'Sube un diseño para el primer bordado\n';
+            }
+
+            if (document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true') {
+                if (!document.querySelector('input[name="secondEmbroideryFile"]').files[0]) {
+                    isValid = false;
+                    errorContainer.textContent += 'Sube un diseño para el segundo bordado\n';
+                }
+            }
+
+            return isValid;
+        }
+
     </script>
     <div th:insert="~{user/templateUser.html::script}"></div>
 </body>
