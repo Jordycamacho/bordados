@@ -5,6 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +34,9 @@ public class ProductUserController {
 
     private static final Logger log = LoggerFactory.getLogger(ProductUserController.class);
 
+    @Value("${stripe.key.public}")
+    private String stripePublicKey;
+
     @Autowired
     private ProductService productService;
 
@@ -44,7 +48,7 @@ public class ProductUserController {
 
     @Autowired
     private PricingServiceImpl pricingService;
-    
+
     @ModelAttribute("categoriesWithSub")
     public List<CategorySubCategoryDTO> getCategoriesWithSubCategories() {
         return categoryService.getAllCategoriesWithSubCategories();
@@ -67,6 +71,8 @@ public class ProductUserController {
     public String viewProductCustom(@PathVariable Long id, Model model) {
         Product product = productService.getProductById(id);
         PricingConfiguration pricing = pricingService.getPricingConfiguration();
+        
+        model.addAttribute("stripePublicKey", stripePublicKey);
         model.addAttribute("product", product);
         model.addAttribute("pricing", pricing);
         return "user/productCustom";
