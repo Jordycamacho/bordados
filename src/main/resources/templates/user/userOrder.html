@@ -176,6 +176,19 @@
             color: #dc3545;
             /* Rojo para mensajes de error */
         }
+
+        .policy-link {
+            display: block;
+            text-align: center;
+            color: black;
+            text-decoration: none;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .policy-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -229,6 +242,7 @@
                     <button id="submit" class="checkout-btn">Pagar</button>
                     <div id="payment-message" class="hidden"></div>
                 </form>
+                <a th:href="@{/bordados/politicaenviosrembolsos}" class="policy-link">Política de envíos y reembolso</a>
             </div>
         </div>
     </main>
