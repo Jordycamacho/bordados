@@ -1,11 +1,13 @@
 package com.example.bordados.controller.user;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,7 @@ import com.example.bordados.model.OrderDetail;
 import com.example.bordados.model.PricingConfiguration;
 import com.example.bordados.model.Product;
 import com.example.bordados.model.User;
+import com.example.bordados.model.Enums.DiscountType;
 import com.example.bordados.repository.CustomizedOrderDetailRepository;
 import com.example.bordados.repository.DiscountRepository;
 import com.example.bordados.repository.OrderCustomRepository;
@@ -39,6 +42,7 @@ import com.example.bordados.repository.OrderDetailRepository;
 import com.example.bordados.repository.OrderRepository;
 import com.example.bordados.repository.UserRepository;
 import com.example.bordados.service.CartService;
+import com.example.bordados.service.EmailService;
 import com.example.bordados.service.IUserService;
 import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.OrderServiceImpl;
@@ -46,6 +50,8 @@ import com.example.bordados.service.ServiceImpl.PricingServiceImpl;
 import com.example.bordados.service.ServiceImpl.StripeService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+
+import jakarta.mail.MessagingException;
 
 @Controller
 @RequestMapping("/bordados/orden")
@@ -69,14 +75,17 @@ public class OrderController {
     private final CustomizedOrderDetailRepository customizedOrderDetailRepository;
     private final DiscountRepository discountRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public OrderController(CartService cartService, IUserService userService, OrderServiceImpl orderService,
             ProductService productService, StripeService stripeService, PricingServiceImpl pricingService,
             OrderRepository orderRepository, OrderCustomRepository orderCustomRepository,
+            EmailService emailService,
             OrderDetailRepository orderDetailRepository, DiscountRepository discountRepository,
             CustomizedOrderDetailRepository customizedOrderDetailRepository, UserRepository userRepository) {
         this.productService = productService;
         this.userRepository = userRepository;
+        this.emailService = emailService;
         this.discountRepository = discountRepository;
         this.customizedOrderDetailRepository = customizedOrderDetailRepository;
         this.orderRepository = orderRepository;
@@ -158,17 +167,38 @@ public class OrderController {
             Discount discount = null; // Variable para descuentos normales
 
             if (referrerOpt.isPresent()) {
+                User referrer = referrerOpt.get(); // Usuario dueño del código de referido
+
                 // Lógica de afiliación
                 if (currentUser.getReferrer() != null) {
                     throw new IllegalArgumentException("Ya tienes un referido");
                 }
 
-                if (orderRepository.countByUser(currentUser) > 1) {
+                if (orderRepository.countByUser(currentUser) > 100) {
                     throw new IllegalArgumentException("Válido solo para primera compra");
                 }
 
-                discountPercentage = 10.0;
+                discountPercentage = 10.0; // 10% de descuento por afiliación
 
+                // Generar un cupón de descuento del 5% para el referidor
+                Discount referralDiscount = Discount.builder()
+                        .code(UUID.randomUUID().toString().substring(0, 8)) // Código aleatorio
+                        .discountPercentage(5.0) // 5% de descuento
+                        .type(DiscountType.AFFILIATE)
+                        .user(referrer) // El referidor recibe el cupón
+                        .expirationDate(LocalDateTime.now().plusMonths(1)) // Válido por 1 mes
+                        .maxUses(1) // Solo se puede usar una vez
+                        .currentUses(0)
+                        .build();
+                discountRepository.save(referralDiscount);
+
+                // Enviar correo electrónico con el cupón de descuento al referidor
+                try {
+                    emailService.sendReferedEmail(referrer.getEmail(), referrer.getName(), referralDiscount);
+                } catch (MessagingException e) {
+                    // Manejar el error de envío de correo
+                    System.err.println("Error enviando el correo: " + e.getMessage());
+                }
             } else {
                 // Lógica de descuento normal
                 discount = discountRepository.findByCode(codigo)
@@ -212,53 +242,72 @@ public class OrderController {
     @PostMapping("/validardescuento-custom")
     public ResponseEntity<?> validarDescuentoCustom(@RequestBody Map<String, Object> request) {
         String codigo = (String) request.get("code");
-    
+
         try {
             // Validar que el campo 'total' esté presente y sea un número
             if (!request.containsKey("total") || request.get("total") == null) {
                 throw new IllegalArgumentException("El campo 'total' es requerido");
             }
-    
+
             // Convertir el total a double
             double total = Double.parseDouble(request.get("total").toString());
-    
+
             User currentUser = userService.getCurrentUser();
             double discountPercentage = 0.0;
             Optional<User> referrerOpt = userRepository.findUserByAffiliateCode(codigo);
             Discount discount = null;
-    
+
             // Lógica de afiliación
             if (referrerOpt.isPresent()) {
+                User referrer = referrerOpt.get();
                 if (currentUser.getReferrer() != null) {
                     throw new IllegalArgumentException("Ya tienes un referido");
                 }
-    
-                if (orderRepository.countByUser(currentUser) > 1) {
+
+                if (orderRepository.countByUser(currentUser) > 100) {
                     throw new IllegalArgumentException("Válido solo para primera compra");
                 }
-    
-                discountPercentage = 10.0; // 10% de descuento por afiliación
+
+                discountPercentage = 10.0;
+
+                Discount referralDiscount = Discount.builder()
+                        .code(UUID.randomUUID().toString().substring(0, 8))
+                        .discountPercentage(5.0)
+                        .type(DiscountType.AFFILIATE)
+                        .user(referrer)
+                        .expirationDate(LocalDateTime.now().plusMonths(1))
+                        .maxUses(1)
+                        .currentUses(0)
+                        .build();
+                discountRepository.save(referralDiscount);
+
+                try {
+                    emailService.sendReferedEmail(referrer.getEmail(), referrer.getName(), referralDiscount);
+                } catch (MessagingException e) {
+                    // Manejar el error de envío de correo
+                    System.err.println("Error enviando el correo: " + e.getMessage());
+                }
             } else {
                 // Lógica de descuento normal
                 discount = discountRepository.findByCode(codigo)
                         .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
-    
+
                 if (!discount.isValid()) {
                     throw new IllegalArgumentException("Código expirado o ya usado");
                 }
                 discountPercentage = discount.getDiscountPercentage();
             }
-    
+
             // Aplicar descuento (convertir porcentaje a decimal)
             double newTotal = total * (1 - (discountPercentage / 100.0));
-    
+
             // Crear un nuevo PaymentIntent con el nuevo total
             long amountInCents = (long) (newTotal * 100);
-    
+
             String originalPaymentIntentId = (String) request.get("paymentIntentId");
             String newClientSecret;
             String newPaymentIntentId;
-    
+
             if (originalPaymentIntentId != null && !originalPaymentIntentId.isEmpty()) {
                 // Actualizar el PaymentIntent existente
                 PaymentIntent paymentIntent = PaymentIntent.retrieve(originalPaymentIntentId);
@@ -271,20 +320,19 @@ public class OrderController {
                 // Crear un nuevo PaymentIntent si no existe uno original
                 PaymentIntent paymentIntent = PaymentIntent.create(Map.of(
                         "amount", amountInCents,
-                        "currency", "usd"
-                ));
+                        "currency", "usd"));
                 newClientSecret = paymentIntent.getClientSecret();
                 newPaymentIntentId = paymentIntent.getId(); // Devuelve el nuevo ID
             }
-    
+
             // Devolver el nuevo total, el clientSecret y el paymentIntentId actualizado
             Map<String, Object> response = new HashMap<>();
             response.put("newTotal", newTotal);
             response.put("newClientSecret", newClientSecret);
             response.put("paymentIntentId", newPaymentIntentId); // Asegúrate de devolver esto
-    
+
             return ResponseEntity.ok(response);
-    
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
