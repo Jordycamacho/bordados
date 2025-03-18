@@ -209,6 +209,77 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/validardescuento-custom")
+    public ResponseEntity<?> validarDescuentoCustom(@RequestBody Map<String, Object> request) {
+        String codigo = (String) request.get("code");
+
+        try {
+            // Validar que el campo 'total' esté presente y sea un número
+            if (!request.containsKey("total") || request.get("total") == null) {
+                throw new IllegalArgumentException("El campo 'total' es requerido");
+            }
+
+            // Convertir el total a double
+            double total = Double.parseDouble(request.get("total").toString());
+
+            User currentUser = userService.getCurrentUser();
+            double discountPercentage = 0.0;
+            Optional<User> referrerOpt = userRepository.findUserByAffiliateCode(codigo);
+            Discount discount = null;
+            String newClientSecret;
+            // Lógica de afiliación
+            if (referrerOpt.isPresent()) {
+                if (currentUser.getReferrer() != null) {
+                    throw new IllegalArgumentException("Ya tienes un referido");
+                }
+
+                if (orderRepository.countByUser(currentUser) > 1) {
+                    throw new IllegalArgumentException("Válido solo para primera compra");
+                }
+
+                discountPercentage = 10.0; // 10% de descuento por afiliación
+            } else {
+                // Lógica de descuento normal
+                discount = discountRepository.findByCode(codigo)
+                        .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
+
+                if (!discount.isValid()) {
+                    throw new IllegalArgumentException("Código expirado o ya usado");
+                }
+                discountPercentage = discount.getDiscountPercentage();
+            }
+
+            // Aplicar descuento (convertir porcentaje a decimal)
+            double newTotal = total * (1 - (discountPercentage / 100.0));
+
+            // Crear un nuevo PaymentIntent con el nuevo total
+            long amountInCents = (long) (newTotal * 100);
+
+            String originalPaymentIntentId = (String) request.get("paymentIntentId");
+            if (originalPaymentIntentId != null && !originalPaymentIntentId.isEmpty()) {
+                PaymentIntent paymentIntent = PaymentIntent.retrieve(originalPaymentIntentId);
+                Map<String, Object> updateParams = new HashMap<>();
+                updateParams.put("amount", amountInCents);
+                paymentIntent.update(updateParams);
+                newClientSecret = paymentIntent.getClientSecret();
+            } else {
+                newClientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
+            }
+            // Devolver el nuevo total y el clientSecret actualizado
+            Map<String, Object> response = new HashMap<>();
+            response.put("newTotal", newTotal);
+            response.put("newClientSecret", newClientSecret);
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/createCustomOrder")
     public String createOrderCustom(@RequestParam("paymentIntentId") String paymentIntentId,
             @ModelAttribute CustomizedOrderDetailDto customOrderDetail,
@@ -251,7 +322,7 @@ public class OrderController {
         }
 
         // Crear la orden personalizada
-    
+
     }
 
     private double calculateAdditionalCost(CustomizedOrderDetailDto dto, PricingConfiguration pricing) {
@@ -371,8 +442,8 @@ public class OrderController {
     public ResponseEntity<?> createDynamicPaymentIntent(@RequestBody Map<String, Object> request) {
         try {
             if (!request.containsKey("amount")) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Falta el campo 'amount'"));
-        }
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Falta el campo 'amount'"));
+            }
             long amount = Long.parseLong(request.get("amount").toString());
             String currency = request.get("currency").toString();
             String clientSecret = stripeService.createPaymentIntent(amount, currency, null);

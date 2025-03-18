@@ -53,6 +53,64 @@
             font-size: 14px;
         }
 
+        /* Estilos para la sección de descuento */
+        .discount-section {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* Espacio entre elementos */
+        }
+
+        #discountCode {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            flex: 1;
+            /* Ocupa el espacio disponible */
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #discountCode:focus {
+            border-color: #000;
+            /* Cambia el color del borde al enfocar */
+        }
+
+        .discount-section button {
+            padding: 10px 15px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .discount-section button:hover {
+            background-color: #333;
+            /* Efecto hover para el botón */
+        }
+
+        #discountMessage {
+            font-size: 14px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        /* Estilos para mensajes de éxito y error */
+        #discountMessage[style*="green"] {
+            color: #28a745;
+            /* Verde para mensajes de éxito */
+        }
+
+        #discountMessage[style*="red"] {
+            color: #dc3545;
+            /* Rojo para mensajes de error */
+        }
+
         /* En móvil, se apilan las columnas */
         @media (max-width: 768px) {
             .order-summary {
@@ -245,7 +303,6 @@
                             ¿Quieres ver cómo quedaría tu bordado?
                         </a>
                     </div>
-                    <!-- Botón para enviar    <button type="submit">Comprar</button>-->
 
                     <div class="payment-section">
                         <h2>Pago con Tarjeta</h2>
@@ -254,7 +311,17 @@
                         <input type="hidden" name="paymentIntentId" id="paymentIntentId">
                         <button type="submit" class="checkout-btn">Pagar</button>
                     </div>
+
                 </form>
+
+                <p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>
+
+                <div class="discount-section">
+                    <input type="text" id="discountCode" placeholder="Código de descuento">
+                    <button id="applyDiscountButton">Aplicar</button>
+                    <span id="discountMessage"></span>
+                </div>
+
 
                 <!-- Guía de Tallas -->
                 <section class="size-guide">
@@ -358,18 +425,91 @@
     <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
 
     <script>
+        // 33333333
+        let stripe;
+        let elements;
+        let cardElement;
 
+        // Función para inicializar Stripe
+        function initializeStripeElements() {
+            console.log("Inicializando elementos de Stripe...");
 
+            // Destruye elementos anteriores si existen
+            if (cardElement) cardElement.unmount();
 
+            // Crea nuevos elementos
+            elements = stripe.elements();
+            cardElement = elements.create("card");
+            cardElement.mount("#card-element");
+        }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const stripePublicKey = "[[${stripePublicKey}]]";
-            const stripe = Stripe(stripePublicKey);
-            const elements = stripe.elements();
-            const cardElement = elements.create('card');
-            cardElement.mount('#card-element');
+        // Función para aplicar descuento
+        async function applyDiscountCustom() {
+            const discountCode = document.getElementById("discountCode").value;
+            const totalElement = document.getElementById("totalAmount");
+            const dynamicTotalElement = document.getElementById("dynamicTotal");
+            const discountMessage = document.getElementById("discountMessage");
+            const paymentIntentId = document.getElementById("paymentIntentId").value;
 
-            // Inicializar precios desde el backend usando Thymeleaf
+            try {
+                // Obtener el total actual desde la vista
+                const total = parseFloat(totalElement.textContent);
+
+                // Verificar si el total es un número válido
+                if (isNaN(total)) {
+                    throw new Error("El total no es un número válido");
+                }
+
+                // Enviar el código de descuento y el total al backend
+                const response = await fetch("/bordados/orden/validardescuento-custom", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        code: discountCode,
+                        total: total,
+                        paymentIntentId: paymentIntentId // Envía el ID del PaymentIntent original
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Error aplicando descuento");
+                }
+
+                const responseData = await response.json();
+                console.log("Respuesta del backend:", responseData);
+
+                // Verifica que newTotal esté definido y sea un número
+                if (typeof responseData.newTotal !== "number") {
+                    throw new Error("El nuevo total no es válido");
+                }
+
+                // Actualiza el total en la vista
+                const newTotal = responseData.newTotal;
+                totalElement.textContent = newTotal.toFixed(2);
+                dynamicTotalElement.textContent = newTotal.toFixed(2);
+                discountMessage.textContent = "✓ Descuento aplicado";
+                discountMessage.style.color = "green";
+
+                // Actualiza el Client Secret para Stripe
+                currentClientSecret = responseData.newClientSecret;
+                initializeStripeElements(); // Reinicia los elementos de Stripe
+
+            } catch (error) {
+                discountMessage.textContent = error.message;
+                discountMessage.style.color = "red";
+            }
+        }
+
+        // Función para actualizar el total en la vista
+        function updateTotalDisplay() {
+            const total = calculateTotal();
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+            document.getElementById('dynamicTotal').textContent = total.toFixed(2);
+        }
+
+        // Función para calcular el total dinámico
+        function calculateTotal() {
             const pricing = {
                 mediumSizeFirstEmbroideryPrice: [[${ pricing.mediumSizeFirstEmbroideryPrice }]],
                 largeSizeFirstEmbroideryPrice: [[${ pricing.largeSizeFirstEmbroideryPrice }]],
@@ -380,36 +520,89 @@
             };
 
             const productPrice = [[${ product.price }]];
+            let total = productPrice || 0;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
 
-            // Función para calcular el total dinámico
-            function calculateTotal() {
-                let total = productPrice || 0;
-                const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            // Costo del primer bordado
+            const embroideryType = document.querySelector('select[name="embroideryType"]').value;
+            if (embroideryType === "Mediano") total += pricing.mediumSizeFirstEmbroideryPrice;
+            if (embroideryType === "Grande") total += pricing.largeSizeFirstEmbroideryPrice;
 
-                // Costo del primer bordado
-                const embroideryType = document.querySelector('select[name="embroideryType"]').value;
-                if (embroideryType === "Mediano") total += pricing.mediumSizeFirstEmbroideryPrice;
-                if (embroideryType === "Grande") total += pricing.largeSizeFirstEmbroideryPrice;
-
-                // Costo del segundo bordado si aplica
-                if (document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true') {
-                    total += pricing.secondDesignPrice;
-                    const secondEmbroideryType = document.querySelector('select[name="secondEmbroideryType"]').value;
-                    if (secondEmbroideryType === "Mediano") total += pricing.mediumSizeSecondEmbroideryPrice;
-                    if (secondEmbroideryType === "Grande") total += pricing.largeSizeSecondEmbroideryPrice;
-                }
-
-                // Costo de manga si aplica
-                if (document.querySelector('input[name="hasSleeveEmbroidery"]:checked').value === 'true') {
-                    total += pricing.sleevePrice;
-                }
-
-                return total * quantity;
+            // Costo del segundo bordado si aplica
+            if (document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true') {
+                total += pricing.secondDesignPrice;
+                const secondEmbroideryType = document.querySelector('select[name="secondEmbroideryType"]').value;
+                if (secondEmbroideryType === "Mediano") total += pricing.mediumSizeSecondEmbroideryPrice;
+                if (secondEmbroideryType === "Grande") total += pricing.largeSizeSecondEmbroideryPrice;
             }
 
-            function updateTotalDisplay() {
+            // Costo de manga si aplica
+            if (document.querySelector('input[name="hasSleeveEmbroidery"]:checked').value === 'true') {
+                total += pricing.sleevePrice;
+            }
+
+            return total * quantity;
+        }
+
+        // Función para manejar el envío del formulario
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            // Validar formulario
+            if (!validateForm()) {
+                submitButton.disabled = false;
+                return;
+            }
+
+            try {
+                // Calcular el total y convertirlo a centavos
                 const total = calculateTotal();
-                document.getElementById('dynamicTotal').textContent = total.toFixed(2);
+                if (total <= 0) throw new Error("El total debe ser mayor que cero");
+                const amountInCents = Math.round(total * 100);
+
+                // Crear PaymentIntent dinámico
+                const response = await fetch('/bordados/orden/createpaymentintent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: amountInCents, currency: 'usd' })
+                });
+
+                if (!response.ok) throw new Error('Error creando intención de pago');
+
+                const { clientSecret } = await response.json();
+
+                // Confirmar pago con Stripe
+                const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: { card: cardElement }
+                });
+
+                if (error) throw error;
+
+                // Asignar paymentIntentId al campo oculto
+                document.getElementById('paymentIntentId').value = paymentIntent.id;
+
+                // Enviar formulario
+                form.submit();
+            } catch (error) {
+                document.getElementById('card-errors').textContent = error.message;
+                submitButton.disabled = false;
+            }
+        }
+
+        // Event listener principal
+        document.addEventListener("DOMContentLoaded", async function () {
+            // Inicializar Stripe
+            const stripePublicKey = "[[${stripePublicKey}]]";
+            stripe = Stripe(stripePublicKey);  // Asigna a la variable global
+            initializeStripeElements();
+
+            // Configurar botón de descuento
+            const applyDiscountButton = document.getElementById("applyDiscountButton");
+            if (applyDiscountButton) {
+                applyDiscountButton.addEventListener("click", applyDiscountCustom);
             }
 
             // Añadir event listeners a todos los elementos que afectan el precio
@@ -417,61 +610,12 @@
                 element.addEventListener('change', updateTotalDisplay);
             });
 
+            // Actualizar el total inicial
             updateTotalDisplay();
-
-            // Manejador de envío del formulario
-            async function handleSubmit(event) {
-                event.preventDefault();
-                const form = event.target;
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-
-                // Validar formulario
-                if (!validateForm()) {
-                    submitButton.disabled = false;
-                    return;
-                }
-
-                try {
-                    // Calcular el total y convertirlo a centavos
-                    const total = calculateTotal();
-                    if (total <= 0) throw new Error("El total debe ser mayor que cero");
-                    const amountInCents = Math.round(total * 100);
-
-                    // Crear PaymentIntent dinámico
-                    const response = await fetch('/bordados/orden/createpaymentintent', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ amount: amountInCents, currency: 'usd' })
-                    });
-
-                    if (!response.ok) throw new Error('Error creando intención de pago');
-
-                    const { clientSecret } = await response.json();
-
-                    // Confirmar pago con Stripe
-                    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-                        payment_method: { card: cardElement }
-                    });
-
-                    if (error) throw error;
-
-                    // Asignar paymentIntentId al campo oculto
-                    document.getElementById('paymentIntentId').value = paymentIntent.id;
-
-                    // Enviar formulario
-                    form.submit();
-                } catch (error) {
-                    document.getElementById('card-errors').textContent = error.message;
-                    submitButton.disabled = false;
-                }
-            }
 
             // Asignar manejador al formulario
             document.getElementById('main-form').addEventListener('submit', handleSubmit);
         });
-
-
 
 
 
