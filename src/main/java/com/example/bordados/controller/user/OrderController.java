@@ -212,66 +212,79 @@ public class OrderController {
     @PostMapping("/validardescuento-custom")
     public ResponseEntity<?> validarDescuentoCustom(@RequestBody Map<String, Object> request) {
         String codigo = (String) request.get("code");
-
+    
         try {
             // Validar que el campo 'total' esté presente y sea un número
             if (!request.containsKey("total") || request.get("total") == null) {
                 throw new IllegalArgumentException("El campo 'total' es requerido");
             }
-
+    
             // Convertir el total a double
             double total = Double.parseDouble(request.get("total").toString());
-
+    
             User currentUser = userService.getCurrentUser();
             double discountPercentage = 0.0;
             Optional<User> referrerOpt = userRepository.findUserByAffiliateCode(codigo);
             Discount discount = null;
-            String newClientSecret;
+    
             // Lógica de afiliación
             if (referrerOpt.isPresent()) {
                 if (currentUser.getReferrer() != null) {
                     throw new IllegalArgumentException("Ya tienes un referido");
                 }
-
+    
                 if (orderRepository.countByUser(currentUser) > 1) {
                     throw new IllegalArgumentException("Válido solo para primera compra");
                 }
-
+    
                 discountPercentage = 10.0; // 10% de descuento por afiliación
             } else {
                 // Lógica de descuento normal
                 discount = discountRepository.findByCode(codigo)
                         .orElseThrow(() -> new IllegalArgumentException("Código no válido"));
-
+    
                 if (!discount.isValid()) {
                     throw new IllegalArgumentException("Código expirado o ya usado");
                 }
                 discountPercentage = discount.getDiscountPercentage();
             }
-
+    
             // Aplicar descuento (convertir porcentaje a decimal)
             double newTotal = total * (1 - (discountPercentage / 100.0));
-
+    
             // Crear un nuevo PaymentIntent con el nuevo total
             long amountInCents = (long) (newTotal * 100);
-
+    
             String originalPaymentIntentId = (String) request.get("paymentIntentId");
+            String newClientSecret;
+            String newPaymentIntentId;
+    
             if (originalPaymentIntentId != null && !originalPaymentIntentId.isEmpty()) {
+                // Actualizar el PaymentIntent existente
                 PaymentIntent paymentIntent = PaymentIntent.retrieve(originalPaymentIntentId);
                 Map<String, Object> updateParams = new HashMap<>();
                 updateParams.put("amount", amountInCents);
                 paymentIntent.update(updateParams);
                 newClientSecret = paymentIntent.getClientSecret();
+                newPaymentIntentId = paymentIntent.getId(); // Devuelve el mismo ID
             } else {
-                newClientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
+                // Crear un nuevo PaymentIntent si no existe uno original
+                PaymentIntent paymentIntent = PaymentIntent.create(Map.of(
+                        "amount", amountInCents,
+                        "currency", "usd"
+                ));
+                newClientSecret = paymentIntent.getClientSecret();
+                newPaymentIntentId = paymentIntent.getId(); // Devuelve el nuevo ID
             }
-            // Devolver el nuevo total y el clientSecret actualizado
+    
+            // Devolver el nuevo total, el clientSecret y el paymentIntentId actualizado
             Map<String, Object> response = new HashMap<>();
             response.put("newTotal", newTotal);
             response.put("newClientSecret", newClientSecret);
-
+            response.put("paymentIntentId", newPaymentIntentId); // Asegúrate de devolver esto
+    
             return ResponseEntity.ok(response);
-
+    
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {

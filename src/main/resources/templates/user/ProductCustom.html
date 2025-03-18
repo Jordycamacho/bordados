@@ -429,6 +429,8 @@
         let stripe;
         let elements;
         let cardElement;
+        let currentClientSecret;
+        let currentPaymentIntentId;
 
         // Función para inicializar Stripe
         function initializeStripeElements() {
@@ -447,9 +449,7 @@
         async function applyDiscountCustom() {
             const discountCode = document.getElementById("discountCode").value;
             const totalElement = document.getElementById("totalAmount");
-            const dynamicTotalElement = document.getElementById("dynamicTotal");
             const discountMessage = document.getElementById("discountMessage");
-            const paymentIntentId = document.getElementById("paymentIntentId").value;
 
             try {
                 // Obtener el total actual desde la vista
@@ -467,7 +467,7 @@
                     body: JSON.stringify({
                         code: discountCode,
                         total: total,
-                        paymentIntentId: paymentIntentId // Envía el ID del PaymentIntent original
+                        paymentIntentId: currentPaymentIntentId
                     })
                 });
 
@@ -487,20 +487,20 @@
                 // Actualiza el total en la vista
                 const newTotal = responseData.newTotal;
                 totalElement.textContent = newTotal.toFixed(2);
-                dynamicTotalElement.textContent = newTotal.toFixed(2);
                 discountMessage.textContent = "✓ Descuento aplicado";
                 discountMessage.style.color = "green";
 
-                // Actualiza el Client Secret para Stripe
                 currentClientSecret = responseData.newClientSecret;
-                initializeStripeElements(); // Reinicia los elementos de Stripe
+                currentPaymentIntentId = responseData.paymentIntentId;
+                document.getElementById("paymentIntentId").value = currentPaymentIntentId;
+
+                initializeStripeElements();
 
             } catch (error) {
                 discountMessage.textContent = error.message;
                 discountMessage.style.color = "red";
             }
         }
-
         // Función para actualizar el total en la vista
         function updateTotalDisplay() {
             const total = calculateTotal();
@@ -551,31 +551,9 @@
             const submitButton = form.querySelector('button[type="submit"]');
             submitButton.disabled = true;
 
-            // Validar formulario
-            if (!validateForm()) {
-                submitButton.disabled = false;
-                return;
-            }
-
             try {
-                // Calcular el total y convertirlo a centavos
-                const total = calculateTotal();
-                if (total <= 0) throw new Error("El total debe ser mayor que cero");
-                const amountInCents = Math.round(total * 100);
-
-                // Crear PaymentIntent dinámico
-                const response = await fetch('/bordados/orden/createpaymentintent', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: amountInCents, currency: 'usd' })
-                });
-
-                if (!response.ok) throw new Error('Error creando intención de pago');
-
-                const { clientSecret } = await response.json();
-
-                // Confirmar pago con Stripe
-                const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                // Confirmar pago con Stripe usando el Client Secret actualizado
+                const { paymentIntent, error } = await stripe.confirmCardPayment(currentClientSecret, {
                     payment_method: { card: cardElement }
                 });
 
