@@ -15,7 +15,6 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import com.example.bordados.DTOs.CartDTO;
-import com.example.bordados.model.CustomizedOrderDetail;
 import com.example.bordados.model.Discount;
 import com.example.bordados.model.User;
 
@@ -74,26 +73,22 @@ public class EmailService {
     }
 
     public void sendCustomOrderConfirmationEmail(String email, String orderNumber, User user,
-            CustomizedOrderDetail detail, double total) throws MessagingException {
+            double total) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
-        // Crear el contexto para la plantilla Thymeleaf
         Context context = new Context();
         context.setVariable("orderNumber", orderNumber);
         context.setVariable("user", user);
-        context.setVariable("detail", detail); // Detalles del producto personalizado
         context.setVariable("total", total);
-
-        // Procesar la plantilla HTML
+        context.setVariable("viewOrdersUrl", "http://localhost:8080/bordados/orden/usuario");
+      
         String htmlContent = templateEngine.process("emails/customOrderConfirmation", context);
 
-        // Configurar el correo
         helper.setTo(email);
         helper.setSubject("Confirmación de Orden Personalizada #" + orderNumber);
-        helper.setText(htmlContent, true); // true indica que es HTML
+        helper.setText(htmlContent, true); 
 
-        // Enviar el correo
         mailSender.send(mimeMessage);
     }
 

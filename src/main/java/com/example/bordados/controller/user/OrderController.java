@@ -140,6 +140,13 @@ public class OrderController {
             User user = userService.getCurrentUser();
             Order order = orderService.createOrder(user.getId(), paymentIntentId, discountCode);
 
+            emailService.sendCustomOrderConfirmationEmail(
+                user.getEmail(),
+                order.getTrackingNumber(),
+                user,
+                order.getTotal());
+
+
             response.put("success", true);
             response.put("message", "Orden creada exitosamente. Número de seguimiento: " + order.getTrackingNumber());
             response.put("redirectUrl", "/bordados");
@@ -344,7 +351,7 @@ public class OrderController {
     @PostMapping("/createCustomOrder")
     public String createOrderCustom(@RequestParam("paymentIntentId") String paymentIntentId,
             @ModelAttribute CustomizedOrderDetailDto customOrderDetail,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) throws MessagingException {
 
         try {
             User user = userService.getCurrentUser();
@@ -371,6 +378,12 @@ public class OrderController {
             double additionalCost = calculateAdditionalCost(customOrderDetail, pricing);
             customOrderDetail.setAdditionalCost(additionalCost);
             OrderCustom orderCustom = orderService.createOrderCustom(customOrderDetail, paymentIntentId);
+
+            emailService.sendCustomOrderConfirmationEmail(
+                    user.getEmail(),
+                    orderCustom.getTrackingNumber(),
+                    user,
+                    orderCustom.getTotal());
 
             redirectAttributes.addFlashAttribute("success",
                     "Orden creada! Número de seguimiento: " + orderCustom.getTrackingNumber());
