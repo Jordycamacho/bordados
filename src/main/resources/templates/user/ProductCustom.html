@@ -111,19 +111,6 @@
             /* Rojo para mensajes de error */
         }
 
-        .policy-link {
-            display: block;
-            text-align: center;
-            color: black;
-            text-decoration: none;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        .policy-link:hover {
-            text-decoration: underline;
-        }
-
         /* En móvil, se apilan las columnas */
         @media (max-width: 768px) {
             .order-summary {
@@ -307,7 +294,7 @@
                     </div>
 
                     <div class="form-group">
-                        <p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>
+                        <p><strong>Total Estimado:</strong> <span id="dynamicTotal">0.00</span> $</p>
                     </div>
 
                     <!-- nesecita estilos  -->
@@ -327,15 +314,13 @@
 
                 </form>
 
-                <!--<p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>-->
+                <p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>
 
                 <div class="discount-section">
                     <input type="text" id="discountCode" placeholder="Código de descuento">
                     <button id="applyDiscountButton">Aplicar</button>
                     <span id="discountMessage"></span>
                 </div>
-
-                <a th:href="@{/bordados/politicaenviosrembolsos}" class="policy-link">Política de envíos y reembolso</a>
 
 
                 <!-- Guía de Tallas -->
@@ -589,10 +574,31 @@
         document.addEventListener("DOMContentLoaded", async function () {
             // Inicializar Stripe
             const stripePublicKey = "[[${stripePublicKey}]]";
-            stripe = Stripe(stripePublicKey);  // Asigna a la variable global
+            stripe = Stripe(stripePublicKey);
             initializeStripeElements();
 
             // Configurar botón de descuento
+            const total = calculateTotal();
+            try {
+                const response = await fetch("/bordados/orden/createpaymentintent", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        amount: total * 100, // Stripe espera el monto en centavos
+                        currency: "eur" // Asegúrate de usar la moneda correcta
+                    })
+                });
+
+                const responseData = await response.json();
+                currentClientSecret = responseData.clientSecret; // Asigna el client_secret
+                currentPaymentIntentId = responseData.paymentIntentId; // Asigna el paymentIntentId
+                document.getElementById('paymentIntentId').value = currentPaymentIntentId; // Asigna al campo oculto
+            } catch (error) {
+                console.error("Error al crear el PaymentIntent:", error);
+            }
+
+
+
             const applyDiscountButton = document.getElementById("applyDiscountButton");
             if (applyDiscountButton) {
                 applyDiscountButton.addEventListener("click", applyDiscountCustom);
