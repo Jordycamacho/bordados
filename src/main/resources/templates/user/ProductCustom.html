@@ -492,6 +492,33 @@
             cardElement.mount("#card-element");
         }
 
+        async function createNewPaymentIntent() {
+            const total = calculateTotal(); // Calcular el total actualizado
+
+            try {
+                const response = await fetch("/bordados/orden/createpaymentintent", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        amount: total * 100, // Stripe espera el monto en centavos
+                        currency: "eur" // Asegúrate de usar la moneda correcta
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Error al crear el PaymentIntent");
+                }
+
+                const responseData = await response.json();
+                currentClientSecret = responseData.clientSecret; // Actualizar el client_secret
+                currentPaymentIntentId = responseData.paymentIntentId; // Actualizar el paymentIntentId
+                document.getElementById('paymentIntentId').value = currentPaymentIntentId; // Asignar al campo oculto
+
+                console.log("Nuevo PaymentIntent creado:", currentPaymentIntentId);
+            } catch (error) {
+                console.error("Error al crear el PaymentIntent:", error);
+            }
+        }
         // Función para aplicar descuento
         async function applyDiscountCustom() {
             const discountCode = document.getElementById("discountCode").value;
@@ -553,6 +580,8 @@
             const total = calculateTotal();
             document.getElementById('totalAmount').textContent = total.toFixed(2);
             document.getElementById('dynamicTotal').textContent = total.toFixed(2);
+
+            createNewPaymentIntent();
         }
 
         // Función para calcular el total dinámico

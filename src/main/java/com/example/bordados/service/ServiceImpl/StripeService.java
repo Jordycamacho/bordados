@@ -4,6 +4,7 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.PaymentIntentUpdateParams;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
@@ -21,35 +22,48 @@ public class StripeService {
         Stripe.apiKey = stripeSecretKey;
     }
 
-    public String createPaymentIntent(long amount, String currency, Long orderId) throws StripeException {
-        // Validación de parámetros
-        if (amount <= 0) {
-            throw new IllegalArgumentException("El monto debe ser mayor que cero.");
-        }
-        if (currency == null || currency.trim().isEmpty()) {
-            throw new IllegalArgumentException("La moneda no puede estar vacía.");
-        }
-        
+    public String createPaymentIntent(long amount, String currency, String paymentIntentId) throws StripeException {
+        // Validación de parámetros mejorada
+        if (amount <= 0)
+            throw new IllegalArgumentException("El monto debe ser mayor que cero");
+        if (currency == null || currency.trim().isEmpty())
+            throw new IllegalArgumentException("Moneda requerida");
 
         try {
-            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount(amount)
-                    .setCurrency(currency)
-                    
-                    .build();
+            if (paymentIntentId != null && !paymentIntentId.isEmpty()) {
+                // Actualizar PaymentIntent existente
+                PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
 
-            PaymentIntent paymentIntent = PaymentIntent.create(params);
+                PaymentIntentUpdateParams updateParams = PaymentIntentUpdateParams.builder()
+                        .setAmount(amount)
+                        .build();
 
-            // Verificar que el clientSecret no sea nulo
-            if (paymentIntent.getClientSecret() == null) {
-                throw new RuntimeException("No se pudo generar el ClientSecret.");
+                PaymentIntent updatedIntent = paymentIntent.update(updateParams);
+
+                if (updatedIntent.getClientSecret() == null) {
+                    throw new RuntimeException("Error actualizando PaymentIntent: ClientSecret nulo");
+                }
+
+                return updatedIntent.getClientSecret();
+            } else {
+                // Crear nuevo PaymentIntent
+                PaymentIntentCreateParams createParams = PaymentIntentCreateParams.builder()
+                        .setAmount(amount)
+                        .setCurrency(currency.toLowerCase())
+                        .addPaymentMethodType("card")
+                        .build();
+
+                PaymentIntent newIntent = PaymentIntent.create(createParams);
+
+                if (newIntent.getClientSecret() == null) {
+                    throw new RuntimeException("Error creando PaymentIntent: ClientSecret nulo");
+                }
+
+                return newIntent.getClientSecret();
             }
-
-            return paymentIntent.getClientSecret(); // Retorna el Client Secret
         } catch (StripeException e) {
-            // Log del error (puedes usar un logger aquí)
-            System.err.println("Error al crear el PaymentIntent: " + e.getMessage());
-            throw e; // Relanzar la excepción para manejarla en el controlador
+            System.err.println("Error Stripe: " + e.getCode() + " - " + e.getMessage());
+            throw e;
         }
     }
 

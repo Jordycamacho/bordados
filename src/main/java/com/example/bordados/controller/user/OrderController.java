@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
@@ -120,7 +121,7 @@ public class OrderController {
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("total", finalTotal);
             model.addAttribute("stripePublicKey", stripePublicKey);
-            String clientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
+            String clientSecret = stripeService.createPaymentIntent(amountInCents, "eur", null);
             model.addAttribute("clientSecret", clientSecret);
 
             return "user/userOrder";
@@ -141,11 +142,10 @@ public class OrderController {
             Order order = orderService.createOrder(user.getId(), paymentIntentId, discountCode);
 
             emailService.sendCustomOrderConfirmationEmail(
-                user.getEmail(),
-                order.getTrackingNumber(),
-                user,
-                order.getTotal());
-
+                    user.getEmail(),
+                    order.getTrackingNumber(),
+                    user,
+                    order.getTotal());
 
             response.put("success", true);
             response.put("message", "Orden creada exitosamente. Número de seguimiento: " + order.getTrackingNumber());
@@ -230,7 +230,7 @@ public class OrderController {
             double newTotal = finalTotal * (1 - (discountPercentage / 100.0));
 
             long amountInCents = (long) (newTotal * 100);
-            String newClientSecret = stripeService.createPaymentIntent(amountInCents, "usd", null);
+            String newClientSecret = stripeService.createPaymentIntent(amountInCents, "eur", null);
 
             Map<String, Object> response = new HashMap<>();
             response.put("newTotal", newTotal);
@@ -327,7 +327,7 @@ public class OrderController {
                 // Crear un nuevo PaymentIntent si no existe uno original
                 PaymentIntent paymentIntent = PaymentIntent.create(Map.of(
                         "amount", amountInCents,
-                        "currency", "usd"));
+                        "currency", "eur"));
                 newClientSecret = paymentIntent.getClientSecret();
                 newPaymentIntentId = paymentIntent.getId(); // Devuelve el nuevo ID
             }
@@ -513,17 +513,69 @@ public class OrderController {
 
     @PostMapping("/createpaymentintent")
     @ResponseBody
-    public ResponseEntity<?> createDynamicPaymentIntent(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> createPaymentIntent(@RequestBody Map<String, Object> request) {
         try {
             if (!request.containsKey("amount")) {
                 return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Falta el campo 'amount'"));
             }
             long amount = Long.parseLong(request.get("amount").toString());
             String currency = request.get("currency").toString();
-            String clientSecret = stripeService.createPaymentIntent(amount, currency, null);
-            return ResponseEntity.ok(Collections.singletonMap("clientSecret", clientSecret));
+
+            // Crear un nuevo PaymentIntent
+            Map<String, Object> params = new HashMap<>();
+            params.put("amount", amount);
+            params.put("currency", currency);
+
+            PaymentIntent paymentIntent = PaymentIntent.create(params);
+
+            // Devolver el clientSecret y el paymentIntentId
+            Map<String, String> response = new HashMap<>();
+            response.put("clientSecret", paymentIntent.getClientSecret());
+            response.put("paymentIntentId", paymentIntent.getId());
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/updatepaymentintent")
+    @ResponseBody
+    public ResponseEntity<?> updatePaymentIntent(@RequestBody Map<String, Object> request) {
+        try {
+            if (!request.containsKey("paymentIntentId") || !request.containsKey("amount")) {
+                return ResponseEntity.badRequest()
+                        .body(Collections.singletonMap("error", "Parámetros requeridos: paymentIntentId y amount"));
+            }
+
+            String paymentIntentId = (String) request.get("paymentIntentId");
+            long amount = Long.parseLong(request.get("amount").toString());
+
+            if (amount <= 0) {
+                return ResponseEntity.badRequest()
+                        .body(Collections.singletonMap("error", "El monto debe ser positivo"));
+            }
+
+            Map<String, Object> updateParams = new HashMap<>();
+            updateParams.put("amount", amount);
+
+            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+            PaymentIntent updatedIntent = paymentIntent.update(updateParams);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("newClientSecret", updatedIntent.getClientSecret());
+            response.put("paymentIntentId", updatedIntent.getId());
+
+            return ResponseEntity.ok(response);
+
+        } catch (StripeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error de Stripe: " + e.getMessage()));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Formato de monto inválido"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
         }
     }
 }
