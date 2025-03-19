@@ -80,7 +80,7 @@ public class OrderServiceImpl {
         Order savedOrder = orderRepository.save(order);
 
         try {
-            String clientSecret = stripeService.createPaymentIntent(totalInCents, "usd", savedOrder.getId());
+            String clientSecret = stripeService.createPaymentIntent(totalInCents, "eur", savedOrder.getId());
             savedOrder.setClientSecret(clientSecret);
             orderRepository.save(savedOrder);
         } catch (StripeException e) {
