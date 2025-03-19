@@ -48,6 +48,7 @@ public class Discount {
     @Column(nullable = false)
     private Integer maxUses;
 
+    @Builder.Default
     @Column(nullable = false)
     private Integer currentUses = 0;
 

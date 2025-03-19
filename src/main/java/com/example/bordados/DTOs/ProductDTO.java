@@ -27,6 +27,7 @@ public class ProductDTO {
     @NotBlank(message = "La descripción es obligatoria")
     private String description;
 
+    @Builder.Default
     private String image = "default.jpg";
     
     @NotNull(message = "La cantidad es obligatoria")
@@ -35,18 +36,22 @@ public class ProductDTO {
     @NotNull(message = "El precio es obligatorio")
     private double price;
 
+    @Builder.Default
     @NotNull
     private double discount = 0.0;
 
+    @Builder.Default
     @NotNull(message = "La talla es obligatoria")
     private Set<Size> sizes = new HashSet<>();
 
+    @Builder.Default
     @NotNull(message = "El color es obligatorio")
     private Set<Color> colors = new HashSet<>();
 
     @NotNull(message = "La categoría es obligatoria")
     private Long categoryId;
 
+    @Builder.Default
     private Long subCategoryId = null;
 
 }
