@@ -52,15 +52,6 @@
     <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
 
     <main>
-        <!-- Modal para mostrar el código de descuento -->
-        <div id="discountModal" class="modal" th:if="${param.discountCode}">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>¡Gracias por registrarte!</h2>
-                <p>Tu código de descuento es: <strong th:text="${param.discountCode}"></strong></p>
-            </div>
-        </div>
-
         <section class="collections">
             <h2>PERSONALIZA TU PRENDA</h2>
             <div class="collections-grid">
@@ -154,28 +145,6 @@
     </main>
 
     <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
-
-    <script>
-        // Script para manejar el modal
-        document.addEventListener('DOMContentLoaded', function () {
-            var modal = document.getElementById('discountModal');
-            var span = document.getElementsByClassName('close')[0];
-
-            if (modal) {
-                modal.style.display = 'block';
-            }
-
-            span.onclick = function () {
-                modal.style.display = 'none';
-            }
-
-            window.onclick = function (event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            }
-        });
-    </script>
     <div th:insert="~{user/templateUser.html::script}"></div>
 </body>
 
