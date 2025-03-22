@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class ImageServiceImpl implements ImageService {
 
-    private final String  uploadDir ="images/";
+    private final String  uploadDir ="src/main/resources/images/";
     
     @Override
     public String saveImage(MultipartFile file) {
