@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+<body>
+
+    <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+    <nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+
+    <div class="container mt-4">
+        <h2>Detalles de la Orden</h2>
+
+        <!-- Datos del Usuario -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Datos del Usuario</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nombre:</strong> <span th:text="${order.user.name}"></span></p>
+                <p><strong>Dirección:</strong> <span th:text="${order.user.address}"></span></p>
+                <p><strong>Correo:</strong> <span th:text="${order.user.email}"></span></p>
+            </div>
+        </div>
+
+        <!-- Productos Escogidos -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Productos Escogidos</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Cantidad</th>
+                            <th>Producto</th>
+                            <th>Talla</th>
+                            <th>Color</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail : ${orderDetails}">
+                            <td th:text="${detail.quantity}"></td>
+                            <td th:text="${detail.product.name}"></td>
+                            <td th:text="${detail.size}"></td>
+                            <td th:text="${detail.color}"></td>
+                            <td th:text="${detail.product.price}"></td>
+                            <td th:text="${detail.quantity * detail.product.price}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Total de la Orden -->
+        <div class="mt-4">
+            <h4>Total de la Orden: <span th:text="${order.total}"></span></h4>
+        </div>
+    </div>
+
+    <div th:replace="~{admin/category/templateAdmin.html::script}"></div>
+</body>
+</html>

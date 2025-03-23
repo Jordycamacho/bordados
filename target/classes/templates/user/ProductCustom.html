@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        .preview-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .preview-button:hover {
+            background-color: #0056b3;
+        }
+
+        .payment-section {
+            flex: 1 1 40%;
+            padding: 10px;
+            border-left: 1px solid #ddd;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .checkout-btn:hover {
+            background: #333;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        /* Estilos para la sección de descuento */
+        .discount-section {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* Espacio entre elementos */
+        }
+
+        #discountCode {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            flex: 1;
+            /* Ocupa el espacio disponible */
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #discountCode:focus {
+            border-color: #000;
+            /* Cambia el color del borde al enfocar */
+        }
+
+        .discount-section button {
+            padding: 10px 15px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .discount-section button:hover {
+            background-color: #333;
+            /* Efecto hover para el botón */
+        }
+
+        #discountMessage {
+            font-size: 14px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        /* Estilos para mensajes de éxito y error */
+        #discountMessage[style*="green"] {
+            color: #28a745;
+            /* Verde para mensajes de éxito */
+        }
+
+        #discountMessage[style*="red"] {
+            color: #dc3545;
+            /* Rojo para mensajes de error */
+        }
+
+
+
+        .quantity-btn {
+            display: none;
+            pointer-events: none;
+        }
+
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* En móvil, se apilan las columnas */
+        @media (max-width: 768px) {
+            .order-summary {
+                flex-direction: column;
+            }
+
+            .payment-section {
+                border-left: none;
+                border-top: 1px solid #ddd;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user}"></header>
+    <main>
+        <section class="product-display">
+            <!-- Foto Principal del Producto -->
+            <div class="product-image">
+                <img th:src="@{'/images/' + ${product.image}}" alt="Producto" class="product-image">
+            </div>
+            <div class="product-form">
+                <h1 th:text="${product.name}"></h1>
+                <p class="product-description" th:text="${product.description}"></p>
+                <p class="product-price" th:text="${product.price} + '0 $'"></p>
+
+                <form th:if="${product.quantity > 0}" th:action="@{/bordados/orden/createCustomOrder}" method="post"
+                    enctype="multipart/form-data" id="main-form">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <!-- Cantidad -->
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <div class="quantity-selector">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity(-1)">-</button>
+                            <input type="number" name="quantity" id="quantity" th:max="${product.quantity}" value="1"
+                                min="1" class="quantity-input">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity(1)">+</button>
+                        </div>
+                    </div>
+                    <!-- Color -->
+                    <div class="form-group">
+                        <label>Elige el color de tu prenda*</label>
+                        <div class="color-options">
+                            <button th:each="color : ${product.colors}" th:data-color="${color}" class="color-option"
+                                th:style="'background-color: ' + ${color} + ';'" onclick="selectColor(event)">
+                            </button>
+                        </div>
+                        <input type="hidden" name="color" id="selectedColor">
+                    </div>
+                    <!-- Talla -->
+                    <div class="form-group">
+                        <label>Elige tu talla*</label>
+                        <div class="size-options">
+                            <button th:each="size : ${product.sizes}" th:data-size="${size}" class="size-option"
+                                onclick="selectSize(event)">
+                                [[${size}]]
+                            </button>
+                        </div>
+                        <input type="hidden" name="size" id="selectedSize">
+                    </div>
+                    <!-- Primer bordado -->
+                    <div class="form-group">
+                        <label>¿Qué primer diseño quieres bordar?*</label>
+                        <input type="file" name="firstEmbroideryFile" class="file-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>¿Qué tamaño de bordado quieres?(El ancho es conforme al diseño)*</label>
+                        <select name="embroideryType" class="form-select" required>
+                            <option value="Pequeño">Pequeño( 8 cm de altura)</option>
+                            <option value="Mediano">Mediano( 15 cm de altura ) +
+                                [[${pricing.mediumSizeFirstEmbroideryPrice}]] EUR</option>
+                            <option value="Grande">Grande( 17 cm de altura) +
+                                [[${pricing.largeSizeFirstEmbroideryPrice}]] EUR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>¿Dónde quieres tu primer bordado?*</label>
+                        <div class="placement-options">
+                            <button type="button" class="placement-option" data-placement="Lado izquierdo"
+                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado izquierdo</button>
+                            <button type="button" class="placement-option" data-placement="Medio del
+                            pecho" onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Medio del
+                                pecho</button>
+                            <button type="button" class="placement-option" data-placement="Lado derecho"
+                                onclick="selectPlacement(event, 'firstEmbroideryPlacement')">Lado derecho</button>
+                        </div>
+                        <input type="hidden" name="firstEmbroideryPlacement" id="firstEmbroideryPlacement">
+                    </div>
+                    <!-- Observaciones -->
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea name="observationsFirstEmbroidery" class="form-textarea"
+                            placeholder="Escribe aquí tus observaciones..."></textarea>
+                    </div>
+                    <!-- Segundo bordado (opcional) -->
+                    <div class="form-group">
+                        <label>¿Quieres un segundo bordado en tu prenda? + [[${pricing.secondDesignPrice}]] EUR</label>
+                        <div class="radio-options">
+                            <label><input type="radio" name="hasSecondEmbroidery" value="true"
+                                    onclick="toggleSection('second-embroidery-section', true)"> Sí</label>
+                            <label><input type="radio" name="hasSecondEmbroidery" value="false"
+                                    onclick="toggleSection('second-embroidery-section', false)" checked> No</label>
+                        </div>
+                    </div>
+                    <div id="second-embroidery-section" class="hidden">
+                        <div class="form-group">
+                            <label>¿Qué segundo diseño quieres bordar?*</label>
+                            <input type="file" name="secondEmbroideryFile" class="file-input">
+                        </div>
+                        <div class="form-group">
+                            <label>¿Qué tamaño de bordado quieres? (El ancho es conforme al diseño)*</label>
+                            <select name="secondEmbroideryType" class="form-select" required>
+                                <option value="Pequeño">Pequeño( 8 cm de altura)</option>
+                                <option value="Mediano">Mediano( 15 cm de altura) +
+                                    [[${pricing.mediumSizeSecondEmbroideryPrice}]] EUR</option>
+                                <option value="Grande">Grande( 17 cm de altura) +
+                                    [[${pricing.largeSizeSecondEmbroideryPrice}]] EUR</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>¿Dónde quieres tu segundo bordado?*</label>
+                            <div class="placement-options">
+                                <button type="button" class="placement-option" data-placement="Lado izquierdo"
+                                    onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Lado
+                                    izquierdo</button>
+                                <button type="button" class="placement-option" data-placement="Medio del
+                                pecho" onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Medio del
+                                    pecho</button>
+                                <button type="button" class="placement-option" data-placement="Lado derecho"
+                                    onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Lado derecho</button>
+                                <button type="button" class="placement-option" data-placement="Hombro
+                                izquierdo" onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Hombro
+                                    izquierdo</button>
+                                <button type="button" class="placement-option" data-placement="Hombro derecho"
+                                    onclick="selectPlacement(event, 'secondEmbroideryPlacement')">Hombro
+                                    derecho</button>
+                            </div>
+                            <input type="hidden" name="secondEmbroideryPlacement" id="secondEmbroideryPlacement">
+                        </div>
+                        <div class="form-group">
+                            <label>Observaciones</label>
+                            <textarea name="observationsSecondEmbroidery" class="form-textarea"></textarea>
+                        </div>
+                    </div>
+                    <!-- Bordado en manga (opcional) -->
+                    <div class="form-group">
+                        <label>¿Quieres bordar una manga? + [[${pricing.sleevePrice}]] EUR</label>
+                        <div class="radio-options">
+                            <label><input type="radio" name="hasSleeveEmbroidery" value="true"
+                                    onclick="toggleSection('sleeve-embroidery-section', true)"> Sí</label>
+                            <label><input type="radio" name="hasSleeveEmbroidery" value="false"
+                                    onclick="toggleSection('sleeve-embroidery-section', false)" checked> No</label>
+                        </div>
+                    </div>
+                    <div id="sleeve-embroidery-section" class="hidden">
+                        <div class="form-group">
+                            <label>¿En qué manga?*</label>
+                            <div class="radio-options">
+                                <label><input type="radio" name="sleeveSide" value="Manga Izquierda"> Izquierda</label>
+                                <label><input type="radio" name="sleeveSide" value="Manga Derecha"> Derecha</label>
+                            </div>
+                        </div>
+                        <!-- limitar tamaño -->
+                        <div class="form-group">
+                            <label>Diseño para la manga *</label>
+                            <input type="text" name="sleeveDesign" class="form-input" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label>Color del hilo*</label>
+                            <div class="color-options">
+                                <button type="button" class="color-option" style="background-color: #000000;"
+                                    data-color="Negro" onclick="selectThreadColor('Negro', '#000000')"></button>
+                                <button type="button" class="color-option" style="background-color: #ffffff;"
+                                    data-color="Blanco" onclick="selectThreadColor('Blanco', '#ffffff')"></button>
+
+                            </div>
+                            <input type="hidden" name="sleeveThreadColor" id="selectedThreadColor">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <p><strong>Total Estimado:</strong> <span id="dynamicTotal">0.00</span> $</p>
+                    </div>
+
+                    <!-- nesecita estilos  -->
+                    <div class="form-group">
+                        <a th:href="@{/bordados/producto/preview/{id}(id=${product.id})}" class="preview-button">
+                            ¿Quieres ver cómo quedaría tu bordado?
+                        </a>
+                    </div>
+
+                    <div class="payment-section">
+                        <h2>Pago con Tarjeta</h2>
+                        <div id="card-element"></div>
+                        <div id="card-errors" role="alert"></div>
+                        <input type="hidden" name="paymentIntentId" id="paymentIntentId">
+                        <button type="submit" class="checkout-btn">Pagar</button>
+                    </div>
+
+                </form>
+
+                <p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>
+
+                <div class="discount-section">
+                    <input type="text" id="discountCode" placeholder="Código de descuento">
+                    <button id="applyDiscountButton">Aplicar</button>
+                    <span id="discountMessage"></span>
+                </div>
+        </section>
+
+        <section class="size-guide">
+            <h2>Guía de Tallas</h2>
+            <div class="tables-container">
+                <!-- Tabla para Camisas -->
+                <div class="size-table">
+                    <h3>Camisas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>57</td>
+                                <td>58</td>
+                                <td>68</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>59</td>
+                                <td>60</td>
+                                <td>70</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>61</td>
+                                <td>62</td>
+                                <td>72</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>63</td>
+                                <td>64</td>
+                                <td>74</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>65</td>
+                                <td>66</td>
+                                <td>77</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tabla para Sudaderas con capucha -->
+                <div class="size-table">
+                    <h3>Sudaderas con Capucha</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>69</td>
+                                <td>62</td>
+                                <td>73</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>71</td>
+                                <td>64</td>
+                                <td>75</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>73</td>
+                                <td>66</td>
+                                <td>77</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>75</td>
+                                <td>68</td>
+                                <td>79</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>77</td>
+                                <td>70</td>
+                                <td>81</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tabla para Sudaderas -->
+                <div class="size-table">
+                    <h3>Sudaderas</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talla</th>
+                                <th>Ancho (cm)</th>
+                                <th>Largo (cm)</th>
+                                <th>Manga (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>S</td>
+                                <td>69</td>
+                                <td>62</td>
+                                <td>73</td>
+                            </tr>
+                            <tr>
+                                <td>M</td>
+                                <td>71</td>
+                                <td>64</td>
+                                <td>75</td>
+                            </tr>
+                            <tr>
+                                <td>L</td>
+                                <td>73</td>
+                                <td>66</td>
+                                <td>77</td>
+                            </tr>
+                            <tr>
+                                <td>XL</td>
+                                <td>75</td>
+                                <td>68</td>
+                                <td>79</td>
+                            </tr>
+                            <tr>
+                                <td>2XL</td>
+                                <td>77</td>
+                                <td>70</td>
+                                <td>81</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+
+    <script>
+        // 33333333
+        let stripe;
+        let elements;
+        let cardElement;
+        let currentClientSecret;
+        let currentPaymentIntentId;
+
+        // Función para inicializar Stripe
+        function initializeStripeElements() {
+            console.log("Inicializando elementos de Stripe...");
+
+            // Destruye elementos anteriores si existen
+            if (cardElement) cardElement.unmount();
+
+            // Crea nuevos elementos
+            elements = stripe.elements();
+            cardElement = elements.create("card");
+            cardElement.mount("#card-element");
+        }
+
+        async function createNewPaymentIntent() {
+            const total = calculateTotal(); // Calcular el total actualizado
+
+            try {
+                const response = await fetch("/bordados/orden/createpaymentintent", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        amount: total * 100, // Stripe espera el monto en centavos
+                        currency: "eur" // Asegúrate de usar la moneda correcta
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Error al crear el PaymentIntent");
+                }
+
+                const responseData = await response.json();
+                currentClientSecret = responseData.clientSecret; // Actualizar el client_secret
+                currentPaymentIntentId = responseData.paymentIntentId; // Actualizar el paymentIntentId
+                document.getElementById('paymentIntentId').value = currentPaymentIntentId; // Asignar al campo oculto
+
+                console.log("Nuevo PaymentIntent creado:", currentPaymentIntentId);
+            } catch (error) {
+                console.error("Error al crear el PaymentIntent:", error);
+            }
+        }
+        // Función para aplicar descuento
+        async function applyDiscountCustom() {
+            const discountCode = document.getElementById("discountCode").value;
+            const totalElement = document.getElementById("totalAmount");
+            const discountMessage = document.getElementById("discountMessage");
+
+            try {
+                // Obtener el total actual desde la vista
+                const total = parseFloat(totalElement.textContent);
+
+                // Verificar si el total es un número válido
+                if (isNaN(total)) {
+                    throw new Error("El total no es un número válido");
+                }
+
+                // Enviar el código de descuento y el total al backend
+                const response = await fetch("/bordados/orden/validardescuento-custom", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        code: discountCode,
+                        total: total,
+                        paymentIntentId: currentPaymentIntentId
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Error aplicando descuento");
+                }
+
+                const responseData = await response.json();
+                console.log("Respuesta del backend:", responseData);
+
+                // Verifica que newTotal esté definido y sea un número
+                if (typeof responseData.newTotal !== "number") {
+                    throw new Error("El nuevo total no es válido");
+                }
+
+                // Actualiza el total en la vista
+                const newTotal = responseData.newTotal;
+                totalElement.textContent = newTotal.toFixed(2);
+                discountMessage.textContent = "✓ Descuento aplicado";
+                discountMessage.style.color = "green";
+
+                currentClientSecret = responseData.newClientSecret;
+                currentPaymentIntentId = responseData.paymentIntentId;
+                document.getElementById("paymentIntentId").value = currentPaymentIntentId;
+
+                initializeStripeElements();
+
+            } catch (error) {
+                discountMessage.textContent = error.message;
+                discountMessage.style.color = "red";
+            }
+        }
+        // Función para actualizar el total en la vista
+        function updateTotalDisplay() {
+            const total = calculateTotal();
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+            document.getElementById('dynamicTotal').textContent = total.toFixed(2);
+
+            createNewPaymentIntent();
+        }
+
+        // Función para calcular el total dinámico
+        function calculateTotal() {
+            const pricing = {
+                mediumSizeFirstEmbroideryPrice: [[${ pricing.mediumSizeFirstEmbroideryPrice }]],
+                largeSizeFirstEmbroideryPrice: [[${ pricing.largeSizeFirstEmbroideryPrice }]],
+                secondDesignPrice: [[${ pricing.secondDesignPrice }]],
+                mediumSizeSecondEmbroideryPrice: [[${ pricing.mediumSizeSecondEmbroideryPrice }]],
+                largeSizeSecondEmbroideryPrice: [[${ pricing.largeSizeSecondEmbroideryPrice }]],
+                sleevePrice: [[${ pricing.sleevePrice }]]
+            };
+
+            const productPrice = [[${ product.price }]];
+            let total = productPrice || 0;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+            // Costo del primer bordado
+            const embroideryType = document.querySelector('select[name="embroideryType"]').value;
+            if (embroideryType === "Mediano") total += pricing.mediumSizeFirstEmbroideryPrice;
+            if (embroideryType === "Grande") total += pricing.largeSizeFirstEmbroideryPrice;
+
+            // Costo del segundo bordado si aplica
+            if (document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true') {
+                total += pricing.secondDesignPrice;
+                const secondEmbroideryType = document.querySelector('select[name="secondEmbroideryType"]').value;
+                if (secondEmbroideryType === "Mediano") total += pricing.mediumSizeSecondEmbroideryPrice;
+                if (secondEmbroideryType === "Grande") total += pricing.largeSizeSecondEmbroideryPrice;
+            }
+
+            // Costo de manga si aplica
+            if (document.querySelector('input[name="hasSleeveEmbroidery"]:checked').value === 'true') {
+                total += pricing.sleevePrice;
+            }
+
+            return total * quantity;
+        }
+
+        // Función para manejar el envío del formulario
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            try {
+                // Confirmar pago con Stripe usando el Client Secret actualizado
+                const { paymentIntent, error } = await stripe.confirmCardPayment(currentClientSecret, {
+                    payment_method: { card: cardElement }
+                });
+
+                if (error) throw error;
+
+                // Asignar paymentIntentId al campo oculto
+                document.getElementById('paymentIntentId').value = paymentIntent.id;
+
+                // Enviar formulario
+                form.submit();
+            } catch (error) {
+                document.getElementById('card-errors').textContent = error.message;
+                submitButton.disabled = false;
+            }
+        }
+
+        // Event listener principal
+        document.addEventListener("DOMContentLoaded", async function () {
+            // Inicializar Stripe
+            const stripePublicKey = "[[${stripePublicKey}]]";
+            stripe = Stripe(stripePublicKey);
+            initializeStripeElements();
+
+            // Configurar botón de descuento
+            const total = calculateTotal();
+            try {
+                const response = await fetch("/bordados/orden/createpaymentintent", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        amount: total * 100, // Stripe espera el monto en centavos
+                        currency: "eur" // Asegúrate de usar la moneda correcta
+                    })
+                });
+
+                const responseData = await response.json();
+                currentClientSecret = responseData.clientSecret; // Asigna el client_secret
+                currentPaymentIntentId = responseData.paymentIntentId; // Asigna el paymentIntentId
+                document.getElementById('paymentIntentId').value = currentPaymentIntentId; // Asigna al campo oculto
+            } catch (error) {
+                console.error("Error al crear el PaymentIntent:", error);
+            }
+
+
+
+            const applyDiscountButton = document.getElementById("applyDiscountButton");
+            if (applyDiscountButton) {
+                applyDiscountButton.addEventListener("click", applyDiscountCustom);
+            }
+
+            // Añadir event listeners a todos los elementos que afectan el precio
+            document.querySelectorAll('select, input[type="radio"], #quantity').forEach(element => {
+                element.addEventListener('change', updateTotalDisplay);
+            });
+
+            // Actualizar el total inicial
+            updateTotalDisplay();
+
+            // Asignar manejador al formulario
+            document.getElementById('main-form').addEventListener('submit', handleSubmit);
+        });
+
+
+
+
+        function updateQuantity(change) {
+            let quantityInput = document.getElementById('quantity');
+            let maxQuantity = parseInt(quantityInput.getAttribute('max'));
+            let newValue = parseInt(quantityInput.value) + change;
+            if (newValue >= 1 && newValue <= maxQuantity) {
+                quantityInput.value = newValue;
+            }
+        }
+
+        function selectColor(event) {
+            event.preventDefault();
+            document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedColor').value = event.target.dataset.color;
+        }
+
+        function selectSize(event) {
+            event.preventDefault();
+            document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedSize').value = event.target.dataset.size;
+        }
+
+        function selectPlacement(event, inputId) {
+            event.preventDefault();
+            document.querySelectorAll('.placement-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById(inputId).value = event.target.dataset.placement;
+        }
+
+        function selectThreadColor(colorName, colorCode) {
+            document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedThreadColor').value = colorName;
+        }
+
+        function toggleSection(sectionId, show) {
+            document.getElementById(sectionId).style.display = show ? "block" : "none";
+        }
+
+        function validateForm(event) {
+            let selectedColor = document.getElementById("selectedColor").value;
+            let selectedSize = document.getElementById("selectedSize").value;
+            let firstEmbroideryFile = document.querySelector('input[name="firstEmbroideryFile"]').files.length > 0;
+            let embroideryType = document.querySelector('select[name="embroideryType"]').value;
+            let firstEmbroideryPlacement = document.getElementById("firstEmbroideryPlacement").value;
+
+            let hasSecondEmbroidery = document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true';
+            let secondEmbroideryFile = document.querySelector('input[name="secondEmbroideryFile"]').files.length > 0;
+            let secondEmbroideryType = document.querySelector('select[name="secondEmbroideryType"]').value;
+            let secondEmbroideryPlacement = document.getElementById("secondEmbroideryPlacement").value;
+
+            if (!selectedColor || !selectedSize || !firstEmbroideryFile || !embroideryType || !firstEmbroideryPlacement) {
+                event.preventDefault();
+                alert("Por favor, completa todos los campos requeridos antes de continuar.");
+            }
+
+            if (hasSecondEmbroidery && (!secondEmbroideryFile || !secondEmbroideryType || !secondEmbroideryPlacement)) {
+                event.preventDefault();
+                alert("Por favor, completa todos los campos del segundo bordado antes de continuar.");
+            }
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const errorContainer = document.getElementById('card-errors');
+            errorContainer.textContent = '';
+
+            // Validar campos requeridos
+            if (!document.getElementById('selectedColor').value) {
+                isValid = false;
+                errorContainer.textContent += 'Selecciona un color\n';
+            }
+
+            if (!document.getElementById('selectedSize').value) {
+                isValid = false;
+                errorContainer.textContent += 'Selecciona una talla\n';
+            }
+
+            if (!document.querySelector('input[name="firstEmbroideryFile"]').files[0]) {
+                isValid = false;
+                errorContainer.textContent += 'Sube un diseño para el primer bordado\n';
+            }
+
+            if (document.querySelector('input[name="hasSecondEmbroidery"]:checked').value === 'true') {
+                if (!document.querySelector('input[name="secondEmbroideryFile"]').files[0]) {
+                    isValid = false;
+                    errorContainer.textContent += 'Sube un diseño para el segundo bordado\n';
+                }
+            }
+
+            return isValid;
+        }
+
+    </script>
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>

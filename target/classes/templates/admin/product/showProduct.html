@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+<body>
+
+<header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+<nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+
+<div class="container mt-4">
+    <h2 class="mb-3">Lista de Productos</h2>
+
+    <a class="btn btn-primary mb-3" th:href="@{/admin/productos/crear}">Crear Nuevo Producto</a>
+
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Descuento</th>
+                <th>Cantidad</th>
+                <th>Categoría</th>
+                <th>Subcategoría</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="product : ${products}">
+                <td th:text="${product.id}"></td>
+                <td th:text="${product.name}"></td>
+                <td th:text="${product.price}"></td>
+                <td th:text="${product.discount + '%'}"></td>
+                <td th:text="${product.quantity}"></td>
+                <td th:text="${product.category.nameCategory}"></td>
+                <td th:text="${product.subCategory != null ? product.subCategory.nameSubcategory : 'N/A'}"></td>
+                <td>
+                    <a class="btn btn-warning btn-sm" th:href="@{/admin/productos/editar/{id}(id=${product.id})}">Editar</a>
+                    <a class="btn btn-danger btn-sm" th:href="@{/admin/productos/delete/{id}(id=${product.id})}" onclick="return confirm('¿Seguro que deseas eliminar este producto?')">Eliminar</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:replace="~{admin/category/templateAdmin.html::script}"></div>
+</body>
+</html>

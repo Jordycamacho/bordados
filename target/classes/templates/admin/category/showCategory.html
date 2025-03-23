@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/category/templateAdmin.html::header}"></head>
+<body>
+
+    <header th:replace="~{admin/category/templateAdmin.html::user_nav}"></header>
+    <nav th:replace="~{admin/category/templateAdmin.html::admin_nav}"></nav>
+    
+    <div class="container mt-4">
+        <h2 class="mb-3">Lista de Categorías</h2>
+
+        <a class="btn btn-primary mb-3" th:href="@{/admin/categorias/crear}">Crear Nueva Categoría</a>
+
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="category : ${categories}">
+                    <td th:text="${category.idCategory}"></td>
+                    <td th:text="${category.nameCategory}"></td>
+                    <td>
+                        <a th:href="@{'/admin/categorias/editar/' + ${category.idCategory}}">Editar</a> |
+                        <a th:href="@{'/admin/categorias/eliminar/' + ${category.idCategory}}" onclick="return confirm('¿Seguro que deseas eliminar esta categoría?')">Eliminar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{admin/category/templateAdmin.html::script}"></div>
+</body>
+</html>

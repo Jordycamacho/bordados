@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* Estilos básicos y neutros */
+        main {
+            max-width: 80%;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #000;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            margin-bottom: 20px;
+        }
+
+        .user-info p {
+            margin: 5px 0;
+        }
+
+        /* Contenedor con dos columnas para desktop */
+        .order-summary {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .order-details {
+            flex: 1 1 55%;
+            padding: 10px;
+        }
+
+        .payment-section {
+            flex: 1 1 40%;
+            padding: 10px;
+            border-left: 1px solid #ddd;
+        }
+
+        /* En móvil, se apilan las columnas */
+        @media (max-width: 768px) {
+            .order-summary {
+                flex-direction: column;
+            }
+
+            .payment-section {
+                border-left: none;
+                border-top: 1px solid #ddd;
+                margin-top: 20px;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f4f4f4;
+            font-weight: bold;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .checkout-btn:hover {
+            background: #333;
+        }
+
+        /* Estilos para la sección de pago con Stripe */
+        #card-element {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+
+        #card-errors {
+            color: #e74c3c;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+
+        /* Estilos para la sección de descuento */
+        .discount-section {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* Espacio entre elementos */
+        }
+
+        #discountCode {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            flex: 1;
+            /* Ocupa el espacio disponible */
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #discountCode:focus {
+            border-color: #000;
+            /* Cambia el color del borde al enfocar */
+        }
+
+        .discount-section button {
+            padding: 10px 15px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .discount-section button:hover {
+            background-color: #333;
+            /* Efecto hover para el botón */
+        }
+
+        #discountMessage {
+            font-size: 14px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        /* Estilos para mensajes de éxito y error */
+        #discountMessage[style*="green"] {
+            color: #28a745;
+            /* Verde para mensajes de éxito */
+        }
+
+        #discountMessage[style*="red"] {
+            color: #dc3545;
+            /* Rojo para mensajes de error */
+        }
+
+        .policy-link {
+            display: block;
+            text-align: center;
+            color: black;
+            text-decoration: none;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .policy-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user}"></header>
+
+    <main>
+        <h1>Resumen de tu Orden</h1>
+        <div class="order-summary">
+            <div class="order-details">
+                <p><strong>Nombre:</strong> [[${user.name}]]</p>
+                <p><strong>Email:</strong> [[${user.email}]]</p>
+                <p><strong>Dirección:</strong> [[${user.address}]]</p>
+                <h2>Productos en tu Carrito</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Talla</th>
+                            <th>Color</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${cartItems}">
+                            <td>[[${item.productName}]]</td>
+                            <td>[[${item.quantity}]]</td>
+                            <td>[[${item.size}]]</td>
+                            <td>[[${item.color}]]</td>
+                            <td>[[${item.price}]] $</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="discount-section">
+                    <input type="text" id="discountCode" placeholder="Código de descuento">
+                    <button onclick="applyDiscount()">Aplicar</button>
+                    <span id="discountMessage"></span>
+                </div>
+
+                <p><strong>Total:</strong> <span id="totalAmount">[[${total}]]</span> $</p>
+
+            </div>
+
+            <div class="payment-section">
+                <h2>Pago con Tarjeta</h2>
+                <form id="payment-form">
+                    <div id="card-element"></div>
+                    <div id="card-errors" role="alert"></div>
+                    <button id="submit" class="checkout-btn">Pagar</button>
+                    <div id="payment-message" class="hidden"></div>
+                </form>
+                <a th:href="@{/bordados/politicaenviosrembolsos}" class="policy-link">Política de envíos y reembolso</a>
+            </div>
+        </div>
+    </main>
+
+    <footer th:insert="~{user/templateUser.html::footer}"></footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            // Variables globales (necesitamos clientSecret mutable)
+            let stripe;
+            let elements;
+            let cardElement;
+            let currentClientSecret = "[[${clientSecret}]]";
+            let stripePublicKey = "[[${stripePublicKey}]]";
+
+            // Inicializar Stripe
+            stripe = Stripe(stripePublicKey);
+            initializeStripeElements();
+
+            // Manejador para aplicar descuento
+            window.applyDiscount = async function () {
+                const discountCode = document.getElementById("discountCode").value;
+                const totalElement = document.getElementById("totalAmount");
+                const discountMessage = document.getElementById("discountMessage");
+
+                try {
+                    const response = await fetch("/bordados/orden/validardescuento", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code: discountCode })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || "Error aplicando descuento");
+                    }
+
+                    const data = await response.json();
+                    console.log("Datos recibidos:", data);
+
+                    // Verifica que newTotal esté definido y sea un número
+                    if (typeof data.newTotal !== "number") {
+                        throw new Error("El nuevo total no es válido");
+                    }
+
+                    // Actualiza el total en la vista
+                    totalElement.textContent = data.newTotal.toFixed(2); // Asegura 2 decimales
+                    discountMessage.textContent = "✓ Descuento aplicado";
+                    discountMessage.style.color = "green";
+
+                    // Actualiza el Client Secret para Stripe
+                    currentClientSecret = data.newClientSecret;
+                    initializeStripeElements(); // Reinicia los elementos de Stripe
+
+                } catch (error) {
+                    discountMessage.textContent = error.message;
+                    discountMessage.style.color = "red";
+                }
+            };
+            // Función para inicializar/reiniciar elementos de Stripe
+            function initializeStripeElements() {
+                if (cardElement) cardElement.unmount();
+
+                elements = stripe.elements();
+                cardElement = elements.create("card");
+                cardElement.mount("#card-element");
+            }
+
+            // Manejador de envío del formulario (original modificado)
+            document.getElementById("payment-form").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const submitButton = document.getElementById("submit");
+                submitButton.disabled = true;
+
+                const { paymentIntent, error } = await stripe.confirmCardPayment(currentClientSecret, {
+                    payment_method: { card: cardElement }
+                });
+
+                if (error) {
+                    document.getElementById("card-errors").textContent = error.message;
+                    submitButton.disabled = false;
+                    return;
+                }
+
+                // Enviar código de descuento junto al paymentIntent.id
+                const discountCode = document.getElementById("discountCode").value;
+
+                fetch("/bordados/orden/crear", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentIntent.id,
+                        discountCode: discountCode // Enviar código al backend
+                    })
+                })
+                    .then(handleResponse)
+                    .catch(handleError);
+            });
+
+            // Helpers para manejar respuestas
+            function handleResponse(response) {
+                if (!response.ok) throw response;
+                return response.json().then(data => {
+                    if (data.success) window.location.href = data.redirectUrl;
+                    else throw new Error(data.message);
+                });
+            }
+
+            function handleError(error) {
+                console.error("Error:", error);
+                error.json().then(err => {
+                    alert(err.message || "Error procesando la orden");
+                    document.getElementById("submit").disabled = false;
+                });
+            }
+        });
+    </script>
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>

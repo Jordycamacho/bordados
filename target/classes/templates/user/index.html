@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAST</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header th:insert="~{user/templateUser.html::nav_user_home}"></header>
+
+    <main>
+        <section class="collections">
+            <h2>PERSONALIZA TU PRENDA</h2>
+            <div class="collections-grid">
+                <a th:each="product : ${customizableProducts}"
+                    th:href="@{'/bordados/producto/personalizar/' + ${product.id}}" class="collection-item">
+                    <div class="collection-image">
+                        <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}">
+                        <div class="collection-name" th:text="${product.name}"></div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+
+        <section class="bestsellers">
+            <h2>BESTSELLERS</h2>
+            <div class="bestsellers-grid">
+                <div th:each="product : ${bestsellers}" class="product-card">
+                    <button class="favorite-btn"
+                        th:attr="onclick=|window.location.href='@{/bordados/wishlist/add/{id}(id=${product.id})}'|">
+                        ❤️
+                    </button>
+                    <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}" class="product-image">
+                    <h3 class="product-name" th:text="${product.name}"></h3>
+                    <p class="product-price">
+                        $<span th:text="${product.price}"></span>
+                        <span class="old-price" th:if="${product.discount > 0}">
+                            $<span th:text="${product.price + product.discount}"></span>
+                        </span>
+                    </p>
+                    <a th:href="@{/bordados/producto/vista/{id}(id=${product.id})}">
+                        <button class="c-button c-button--gooey">
+                            Seleccionar
+                            <div class="c-button__blobs">
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                            </div>
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="customize-section">
+            <div class="customize-video">
+                <video autoplay muted loop id="customize-video" playsinline>
+                    <source src="/images/home_video.mp4" type="video/mp4">
+                    Tu navegador no soporta videos HTML5.
+                </video>
+                <div class="customize-content">
+                    <button class="button_home" data-text="Awesome">
+                        <span class="actual-text">&nbsp;EXPLORA_NUESTRO_CONTENIDO&nbsp;</span>
+                        <span aria-hidden="true" class="hover-text">&nbsp;EXPLORA_NUESTRO_CONTENIDO&nbsp;</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="bestsellers">
+            <h2>OTROS PRODUCTOS</h2>
+            <div class="bestsellers-grid">
+                <div th:each="product : ${randomProducts}" class="product-card">
+                    <button class="favorite-btn"
+                        th:attr="onclick=|window.location.href='@{/bordados/wishlist/add/{id}(id=${product.id})}'|">
+                        ❤️
+                    </button>
+                    <img th:src="@{'/images/' + ${product.image}}" th:alt="${product.name}" class="product-image">
+                    <h3 class="product-name" th:text="${product.name}"></h3>
+                    <p class="product-price">
+                        $<span th:text="${product.price}"></span>
+                        <span class="old-price" th:if="${product.discount > 0}">
+                            $<span th:text="${product.price + product.discount}"></span>
+                        </span>
+                    </p>
+                    <a th:href="@{/bordados/producto/vista/{id}(id=${product.id})}">
+                        <button class="c-button c-button--gooey">
+                            Seleccionar
+                            <div class="c-button__blobs">
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                            </div>
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer" th:insert="~{user/templateUser.html::footer}"></footer>
+    <div th:insert="~{user/templateUser.html::script}"></div>
+</body>
+
+</html>

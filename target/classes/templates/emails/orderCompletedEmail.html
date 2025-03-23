@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido Enviado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header h1 {
+            color: #333333;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content p {
+            color: #555555;
+            line-height: 1.6;
+        }
+        .order-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .order-details h2 {
+            color: #28a745;
+            margin: 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #777777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>¡Tu pedido ha sido enviado!</h1>
+        </div>
+        <div class="content">
+            <p>Gracias por confiar en nosotros. Tu pedido ha sido enviado con éxito y está en camino.</p>
+            <div class="order-details">
+                <h2>Detalles del Pedido</h2>
+                <p><strong>Código de Seguimiento:</strong> <span th:text="${trackingCode}"></span></p>
+                <p><strong>Número de Pedido:</strong> <span th:text="${orderId}"></span></p>
+                <p><strong>Tipo de Pedido:</strong> <span th:text="${orderType == 'normal' ? 'Normal' : 'Personalizado'}"></span></p>
+            </div>
+            <p>Puedes rastrear tu pedido utilizando el código de seguimiento proporcionado.</p>
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+        </div>
+        <div class="footer">
+            <p>Equipo de Gast Shop</p>
+        </div>
+    </div>
+</body>
+</html>
