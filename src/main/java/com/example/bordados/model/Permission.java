@@ -25,5 +25,10 @@ public class Permission {
 
     @Column(unique = true, nullable = false, updatable = false)
     private String name;
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
     
 }

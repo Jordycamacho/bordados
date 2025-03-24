@@ -9,13 +9,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.bordados.service.ImageService;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class ImageServiceImpl implements ImageService {
 
-    private final String  uploadDir ="images/";
+    private final String  uploadDir = Paths.get("").toAbsolutePath().toString() + "/images/";
+    
+    @PostConstruct
+    public void init() {
+        try {
+            Files.createDirectories(Paths.get(uploadDir));
+            log.info("Directorio de imágenes creado en: {}", uploadDir);
+        } catch (IOException e) {
+            log.error("No se pudo crear el directorio de imágenes", e);
+        }
+    }
     
     @Override
     public String saveImage(MultipartFile file) {

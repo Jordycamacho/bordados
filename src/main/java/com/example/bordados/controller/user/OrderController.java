@@ -58,9 +58,6 @@ import jakarta.mail.MessagingException;
 @RequestMapping("/bordados/orden")
 public class OrderController {
 
-    // private static final Logger log =
-    // LoggerFactory.getLogger(ProductUserController.class);
-
     @Value("${stripe.key.public}")
     private String stripePublicKey;
 
@@ -492,7 +489,7 @@ public class OrderController {
         model.addAttribute("order", order);
         model.addAttribute("orderDetails", orderDetails);
 
-        return "/user/orderDetail";
+        return "user/orderDetail";
     }
 
     @GetMapping("/detalle/custom/{id}")
@@ -508,7 +505,7 @@ public class OrderController {
         model.addAttribute("orderCustom", orderCustom);
         model.addAttribute("customizedOrderDetails", customizedOrderDetails);
 
-        return "/user/customOrderDetail";
+        return "user/customOrderDetail";
     }
 
     @PostMapping("/createpaymentintent")

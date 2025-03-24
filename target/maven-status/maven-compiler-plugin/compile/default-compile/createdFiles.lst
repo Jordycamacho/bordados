@@ -68,6 +68,7 @@ com\example\bordados\model\Role.class
 com\example\bordados\repository\CustomizedProductDetailsRepository.class
 com\example\bordados\controller\user\OrderController.class
 com\example\bordados\controller\user\CartController.class
+com\example\bordados\repository\PermissionRepository.class
 com\example\bordados\model\Enums\DiscountType.class
 com\example\bordados\model\Product.class
 com\example\bordados\service\ServiceImpl\PricingInitializationService.class
@@ -92,6 +93,7 @@ com\example\bordados\repository\UserRepository.class
 com\example\bordados\controller\admin\SubCategoryController.class
 com\example\bordados\controller\user\WishlistController.class
 com\example\bordados\service\ServiceImpl\CartServiceImpl.class
+com\example\bordados\config\DataInitializer.class
 com\example\bordados\model\Enums\Size.class
 com\example\bordados\config\ResourceWebConfiguration.class
 com\example\bordados\repository\DiscountRepository.class

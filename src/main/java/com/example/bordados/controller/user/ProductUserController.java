@@ -23,9 +23,6 @@ import com.example.bordados.service.CustomizedProductDetailsService;
 import com.example.bordados.service.ProductService;
 import com.example.bordados.service.ServiceImpl.PricingServiceImpl;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @Controller
@@ -55,18 +52,12 @@ public class ProductUserController {
     }
 
     @GetMapping("/vista/{id}")
-    @Operation(summary = "Ver producto", description = "Muestra la vista del producto con detalles básicos.")
     public String viewProduct(@PathVariable Long id, Model model) {
         Product product = productService.getProductById(id);
         model.addAttribute("product", product);
         return "user/product";
     }
 
-    @Operation(summary = "Ver detalles de un producto")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Producto encontrado"),
-            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
-    })
     @GetMapping("/personalizar/{id}")
     public String viewProductCustom(@PathVariable Long id, Model model) {
         Product product = productService.getProductById(id);
@@ -75,14 +66,9 @@ public class ProductUserController {
         model.addAttribute("stripePublicKey", stripePublicKey);
         model.addAttribute("product", product);
         model.addAttribute("pricing", pricing);
-        return "user/productCustom";
+        return "user/ProductCustom";
     }
 
-    @Operation(summary = "Guardar personalización de un producto")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Personalización guardada"),
-            @ApiResponse(responseCode = "400", description = "Error en los datos")
-    })
     @PostMapping("/save")
     public String saveCustomization(
             @ModelAttribute @Valid CustomizedProductDTO dto) {

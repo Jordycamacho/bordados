@@ -3,6 +3,7 @@ package com.example.bordados.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,12 @@ public class EmailService {
     @Autowired
     private TemplateEngine templateEngine;
 
+    @Value("${email.sender}")
+    private String myEmail;
+
     public void sendContactEmail(String email, String subject, String phone, String message) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo("jordycamacho225@gmail.com"); // Correo de destino
+        mailMessage.setTo(myEmail);
         mailMessage.setSubject("Contacto: " + subject);
         mailMessage.setText("Correo: " + email + "\nTeléfono: " + phone + "\nMensaje: " + message);
         mailSender.send(mailMessage);
@@ -47,7 +51,7 @@ public class EmailService {
     
         helper.setTo(email);
         helper.setSubject("¡Bienvenido a Bordados!");
-        helper.setText(htmlContent, true); // true indica que es HTML
+        helper.setText(htmlContent, true);
     
         mailSender.send(mimeMessage);
     }
@@ -81,7 +85,7 @@ public class EmailService {
         context.setVariable("orderNumber", orderNumber);
         context.setVariable("user", user);
         context.setVariable("total", total);
-        context.setVariable("viewOrdersUrl", "http://localhost:8080/bordados/orden/usuario");
+        context.setVariable("viewOrdersUrl", "https://gastshop.com/bordados/orden/usuario");
       
         String htmlContent = templateEngine.process("emails/customOrderConfirmation", context);
 
@@ -111,25 +115,20 @@ public class EmailService {
 
     public void sendOrderCompletedEmail(String userEmail, String trackingCode, Long orderId, String orderType) {
         try {
-            // Crear el mensaje MimeMessage
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // Configurar el correo
             helper.setTo(userEmail);
             helper.setSubject("Tu pedido ha sido enviado");
 
-            // Crear el contexto para la plantilla Thymeleaf
             Context context = new Context();
             context.setVariable("trackingCode", trackingCode);
             context.setVariable("orderId", orderId);
             context.setVariable("orderType", orderType);
 
-            // Procesar la plantilla HTML
             String htmlContent = templateEngine.process("emails/orderCompletedEmail", context);
-            helper.setText(htmlContent, true); // true indica que el contenido es HTML
+            helper.setText(htmlContent, true);
 
-            // Enviar el correo
             mailSender.send(message);
         } catch (MessagingException e) {
             throw new RuntimeException("Error al enviar el correo electrónico", e);

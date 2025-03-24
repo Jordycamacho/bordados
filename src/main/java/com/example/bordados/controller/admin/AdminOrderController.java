@@ -22,14 +22,12 @@ import com.example.bordados.repository.OrderRepository;
 import com.example.bordados.service.CategoryService;
 import com.example.bordados.service.EmailService;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
-@Tag(name = "AdminOrderController", description = "Controlador para gestionar las ordenes")
 @RequestMapping("/admin/ordenes")
 public class AdminOrderController {
 
@@ -73,7 +71,7 @@ public class AdminOrderController {
         model.addAttribute("completedCustomOrders", completedCustomOrders);
 
 
-        return "/admin/order/showOrder";
+        return "admin/order/showOrder";
     }
 
     @PostMapping("/complete/{id}")
@@ -120,7 +118,7 @@ public class AdminOrderController {
         model.addAttribute("order", order);
         model.addAttribute("orderDetails", orderDetails);
 
-        return "/admin/order/orderDetail";
+        return "admin/order/orderDetail";
     }
 
     @GetMapping("/detalle/custom/{id}")
